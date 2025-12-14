@@ -7,7 +7,9 @@ import TimeRangeInput from '@/components/TimeRangeInput'
 import ClassPeriodSelector from '@/components/ClassPeriodSelector'
 import { getInstructorById, getCourseById } from '@/lib/instructors'
 import { mockClassPeriods } from '@/data'
-import { AttendanceType, Course } from '@/types'
+import { Course, Signature } from '@/types'
+import { getCurrentDateKST, getCurrentTimestampKST, isToday } from '@/lib/time-utils'
+import { saveSignature, checkDuplicateSignature } from '@/lib/storage-utils'
 
 export default function SignaturePage() {
   const router = useRouter()
@@ -22,6 +24,11 @@ export default function SignaturePage() {
   const [endTime, setEndTime] = useState<string>('') // 유형2
   const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null) // 유형3
 
+  // UI 상태
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string>('')
+  const [showSuccess, setShowSuccess] = useState<boolean>(false)
+
   useEffect(() => {
     if (typeof instructorId === 'string' && typeof courseId === 'string') {
       const instructor = getInstructorById(instructorId)
@@ -31,47 +38,107 @@ export default function SignaturePage() {
       if (courseData) setCourse(courseData)
 
       // 현재 날짜 설정 (KST)
-      const now = new Date()
-      const year = now.getFullYear()
-      const month = String(now.getMonth() + 1).padStart(2, '0')
-      const day = String(now.getDate()).padStart(2, '0')
-      setCurrentDate(`${year}-${month}-${day}`)
+      setCurrentDate(getCurrentDateKST())
     }
   }, [instructorId, courseId])
 
-  const handleSave = (imageData: string) => {
-    if (!course) return
+  const handleSave = async (imageData: string) => {
+    if (!course || typeof instructorId !== 'string' || typeof courseId !== 'string')
+      return
 
-    // 유형별 데이터 수집
-    const signatureData: Record<string, unknown> = {
-      instructorId,
-      instructorName,
-      courseId,
-      courseName: course.name,
-      imageData,
-      date: currentDate,
-      attendanceType: course.attendanceType,
+    // 에러 초기화
+    setError('')
+    setIsLoading(true)
+
+    try {
+      // 1. 비활성화된 강의 체크
+      if (!course.isActive) {
+        throw new Error(
+          '비활성화된 강의입니다. 관리자에게 문의하세요.'
+        )
+      }
+
+      // 2. 당일 날짜만 서명 가능 체크
+      const today = getCurrentDateKST()
+      if (currentDate !== today) {
+        throw new Error('당일 날짜에만 서명할 수 있습니다.')
+      }
+
+      // 3. 중복 서명 체크
+      const additionalData: {
+        timeText?: string
+        startTime?: string
+        endTime?: string
+        classPeriodId?: string
+      } = {}
+
+      if (course.attendanceType === 'daily-multiple') {
+        additionalData.timeText = timeText
+      } else if (course.attendanceType === 'time-range') {
+        additionalData.startTime = startTime
+        additionalData.endTime = endTime
+      } else if (course.attendanceType === 'class-period') {
+        additionalData.classPeriodId = selectedPeriodId || undefined
+      }
+
+      const duplicate = checkDuplicateSignature(
+        instructorId,
+        courseId,
+        currentDate,
+        course.attendanceType,
+        additionalData
+      )
+
+      if (duplicate) {
+        const timeInfo =
+          duplicate.timestamp || duplicate.startTime || duplicate.timeText || ''
+        throw new Error(
+          `이미 서명하셨습니다. (${timeInfo ? `기존 서명: ${timeInfo}` : ''})`
+        )
+      }
+
+      // 4. 서명 데이터 생성
+      const signature: Signature = {
+        id: `sig-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        instructorId,
+        instructorName,
+        courseId,
+        courseName: course.name,
+        date: currentDate,
+        timestamp: getCurrentTimestampKST(),
+        imageData,
+        status: 'normal',
+      }
+
+      // 유형별 추가 데이터
+      if (course.attendanceType === 'daily-multiple') {
+        signature.timeText = timeText
+      } else if (course.attendanceType === 'time-range') {
+        signature.startTime = startTime
+        signature.endTime = endTime
+      } else if (course.attendanceType === 'class-period') {
+        signature.classPeriodId = selectedPeriodId || undefined
+      }
+
+      // 5. LocalStorage에 저장
+      saveSignature(signature)
+
+      // 6. 저장 완료 화면 표시
+      setShowSuccess(true)
+      setIsLoading(false)
+
+      // 7. 3초 후 자동으로 강의 선택 화면으로 복귀
+      setTimeout(() => {
+        router.push(`/sign?instructorId=${instructorId}`)
+      }, 3000)
+    } catch (err) {
+      setIsLoading(false)
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError('서명 저장 중 오류가 발생했습니다.')
+      }
     }
-
-    // 유형별 추가 데이터
-    if (course.attendanceType === 'daily-multiple') {
-      signatureData.timeText = timeText
-    } else if (course.attendanceType === 'time-range') {
-      signatureData.startTime = startTime
-      signatureData.endTime = endTime
-    } else if (course.attendanceType === 'class-period') {
-      signatureData.classPeriodId = selectedPeriodId
-      const period = mockClassPeriods.find((p) => p.id === selectedPeriodId)
-      signatureData.periodName = period?.name
-    }
-
-    console.log('서명 저장:', signatureData)
-
-    // 임시: 저장 완료 메시지
-    alert('서명이 저장되었습니다! (Phase 2에서 실제 저장 기능이 구현됩니다)')
-
-    // 강의 선택 화면으로 돌아가기
-    router.push(`/sign?instructorId=${instructorId}`)
   }
 
   // 제출 가능 여부 확인
@@ -105,11 +172,109 @@ export default function SignaturePage() {
     )
   }
 
+  // 저장 완료 화면
+  if (showSuccess) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md w-full mx-4">
+          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+            <div className="mb-4">
+              <svg
+                className="mx-auto h-16 w-16 text-green-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              서명이 완료되었습니다!
+            </h2>
+            <div className="mt-6 space-y-2 text-left bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600">
+                <span className="font-semibold">강사:</span> {instructorName}
+              </p>
+              <p className="text-sm text-gray-600">
+                <span className="font-semibold">강의:</span> {course?.name}
+              </p>
+              <p className="text-sm text-gray-600">
+                <span className="font-semibold">날짜:</span> {currentDate}
+              </p>
+            </div>
+            <p className="mt-6 text-sm text-gray-500">3초 후 자동으로 돌아갑니다...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header title="서명 입력" />
 
       <main className="container mx-auto py-8">
+        {/* 에러 메시지 */}
+        {error && (
+          <div className="max-w-4xl mx-auto mb-6">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <svg
+                  className="h-5 w-5 text-red-500 mt-0.5 mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <div>
+                  <p className="text-sm font-medium text-red-800">{error}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 로딩 중 */}
+        {isLoading && (
+          <div className="max-w-4xl mx-auto mb-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center">
+                <svg
+                  className="animate-spin h-5 w-5 text-blue-500 mr-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                <p className="text-sm text-blue-800">서명을 저장하는 중...</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 출근부 유형별 안내 */}
         <div className="max-w-4xl mx-auto mb-6">
           <div className="bg-white border border-gray-200 rounded-lg p-4">
@@ -153,7 +318,7 @@ export default function SignaturePage() {
             instructorName={instructorName}
             courseName={course.name}
             date={currentDate}
-            canSubmit={canSubmit()}
+            canSubmit={canSubmit() && !isLoading}
           />
         </div>
       </main>
