@@ -1,6 +1,15 @@
 // 출근부 유형
 export type AttendanceType = 'daily-multiple' | 'time-range' | 'class-period'
 
+// 관리자 타입
+export interface Admin {
+  id: string
+  username: string
+  password: string
+  name: string
+  role: 'admin' | 'super-admin'
+}
+
 // 강사 타입
 export interface Instructor {
   id: string
