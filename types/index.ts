@@ -62,3 +62,37 @@ export interface Signature {
   endTime?: string // 유형2 (time-range): 종료 시간 (HH:mm)
   classPeriodId?: string // 유형3 (class-period): 교시 ID
 }
+
+// 활성화된 날짜 타입
+export interface ActivatedDate {
+  id: string
+  instructorId: string
+  instructorName: string
+  courseId: string
+  courseName: string
+  date: string // YYYY-MM-DD format
+  reason: string // 활성화 사유
+  activatedBy: string // 활성화한 관리자 ID
+  activatedByName: string // 활성화한 관리자 이름
+  activatedAt: string // 활성화 시각 (ISO 8601)
+}
+
+// 관리자 행위 로그 타입
+export type AdminActionType =
+  | 'activate_date' // 날짜 활성화
+  | 'invalidate_signature' // 서명 무효화
+  | 'login' // 로그인
+  | 'logout' // 로그아웃
+
+export interface AdminLog {
+  id: string
+  adminId: string
+  adminName: string
+  action: AdminActionType
+  targetType?: string // 대상 유형 (instructor, course, signature 등)
+  targetId?: string // 대상 ID
+  targetName?: string // 대상 이름
+  reason?: string // 사유
+  timestamp: string // ISO 8601 format
+  details?: Record<string, unknown> // 추가 상세 정보
+}

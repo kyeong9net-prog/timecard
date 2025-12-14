@@ -3,9 +3,11 @@
  * 서명 데이터를 브라우저 LocalStorage에 저장하고 조회합니다.
  */
 
-import { Signature } from '@/types'
+import { Signature, ActivatedDate, AdminLog } from '@/types'
 
 const SIGNATURES_KEY = 'signatures'
+const ACTIVATED_DATES_KEY = 'activated_dates'
+const ADMIN_LOGS_KEY = 'admin_logs'
 
 /**
  * 서명 데이터를 LocalStorage에 저장
@@ -118,4 +120,115 @@ export function checkDuplicateSignature(
  */
 export function clearAllSignatures(): void {
   localStorage.removeItem(SIGNATURES_KEY)
+}
+
+// ============================================
+// 날짜 활성화 관련 함수
+// ============================================
+
+/**
+ * 활성화된 날짜 저장
+ */
+export function saveActivatedDate(activatedDate: ActivatedDate): void {
+  try {
+    const dates = getAllActivatedDates()
+    dates.push(activatedDate)
+    localStorage.setItem(ACTIVATED_DATES_KEY, JSON.stringify(dates))
+  } catch (error) {
+    console.error('활성화 날짜 저장 실패:', error)
+    throw new Error('날짜 활성화 중 오류가 발생했습니다.')
+  }
+}
+
+/**
+ * 모든 활성화된 날짜 조회
+ */
+export function getAllActivatedDates(): ActivatedDate[] {
+  try {
+    const data = localStorage.getItem(ACTIVATED_DATES_KEY)
+    if (!data) return []
+    return JSON.parse(data) as ActivatedDate[]
+  } catch (error) {
+    console.error('활성화 날짜 조회 실패:', error)
+    return []
+  }
+}
+
+/**
+ * 특정 강사/강의/날짜가 활성화되어 있는지 확인
+ */
+export function isDateActivated(
+  instructorId: string,
+  courseId: string,
+  date: string
+): boolean {
+  const activatedDates = getAllActivatedDates()
+  return activatedDates.some(
+    (ad) =>
+      ad.instructorId === instructorId &&
+      ad.courseId === courseId &&
+      ad.date === date
+  )
+}
+
+/**
+ * 강사의 활성화된 날짜 목록 조회
+ */
+export function getActivatedDatesByInstructor(
+  instructorId: string
+): ActivatedDate[] {
+  const dates = getAllActivatedDates()
+  return dates.filter((d) => d.instructorId === instructorId)
+}
+
+// ============================================
+// 서명 무효화 관련 함수
+// ============================================
+
+/**
+ * 서명 무효화
+ */
+export function invalidateSignature(signatureId: string): void {
+  try {
+    const signatures = getAllSignatures()
+    const index = signatures.findIndex((s) => s.id === signatureId)
+    if (index !== -1) {
+      signatures[index].status = 'invalidated'
+      localStorage.setItem(SIGNATURES_KEY, JSON.stringify(signatures))
+    }
+  } catch (error) {
+    console.error('서명 무효화 실패:', error)
+    throw new Error('서명 무효화 중 오류가 발생했습니다.')
+  }
+}
+
+// ============================================
+// 관리자 행위 로그 관련 함수
+// ============================================
+
+/**
+ * 관리자 행위 로그 저장
+ */
+export function saveAdminLog(log: AdminLog): void {
+  try {
+    const logs = getAllAdminLogs()
+    logs.push(log)
+    localStorage.setItem(ADMIN_LOGS_KEY, JSON.stringify(logs))
+  } catch (error) {
+    console.error('로그 저장 실패:', error)
+  }
+}
+
+/**
+ * 모든 관리자 행위 로그 조회
+ */
+export function getAllAdminLogs(): AdminLog[] {
+  try {
+    const data = localStorage.getItem(ADMIN_LOGS_KEY)
+    if (!data) return []
+    return JSON.parse(data) as AdminLog[]
+  } catch (error) {
+    console.error('로그 조회 실패:', error)
+    return []
+  }
 }
