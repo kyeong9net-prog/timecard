@@ -18,6 +18,8 @@ import {
   saveSignature,
   checkDuplicateSignature,
   getActivatedDatesByInstructor,
+  isMonthLocked,
+  getMonthFromDate,
 } from '@/lib/storage-utils'
 
 export default function SignaturePage() {
@@ -105,7 +107,15 @@ export default function SignaturePage() {
         )
       }
 
-      // 2. 선택된 날짜가 유효한지 체크 (오늘이거나 활성화된 날짜여야 함)
+      // 2. 월 마감 체크
+      const targetMonth = getMonthFromDate(selectedDate)
+      if (isMonthLocked(targetMonth)) {
+        throw new Error(
+          `${targetMonth} 월은 이미 마감되었습니다. 서명을 추가할 수 없습니다.`
+        )
+      }
+
+      // 3. 선택된 날짜가 유효한지 체크 (오늘이거나 활성화된 날짜여야 함)
       const today = getCurrentDateKST()
       const isActivatedDate = availableDates.find(
         (d) => d.date === selectedDate && d.isActivated
@@ -114,7 +124,7 @@ export default function SignaturePage() {
         throw new Error('오늘 또는 활성화된 날짜만 서명할 수 있습니다.')
       }
 
-      // 3. 중복 서명 체크
+      // 4. 중복 서명 체크
       const additionalData: {
         timeText?: string
         startTime?: string
@@ -147,7 +157,7 @@ export default function SignaturePage() {
         )
       }
 
-      // 4. 서명 데이터 생성
+      // 5. 서명 데이터 생성
       const signature: Signature = {
         id: `sig-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         instructorId,
@@ -170,14 +180,14 @@ export default function SignaturePage() {
         signature.classPeriodId = selectedPeriodId || undefined
       }
 
-      // 5. LocalStorage에 저장
+      // 6. LocalStorage에 저장
       saveSignature(signature)
 
-      // 6. 저장 완료 화면 표시
+      // 7. 저장 완료 화면 표시
       setShowSuccess(true)
       setIsLoading(false)
 
-      // 7. 3초 후 자동으로 강의 선택 화면으로 복귀
+      // 8. 3초 후 자동으로 강의 선택 화면으로 복귀
       setTimeout(() => {
         router.push(`/sign?instructorId=${instructorId}`)
       }, 3000)

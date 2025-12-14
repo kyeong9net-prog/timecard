@@ -5,6 +5,8 @@ import {
   saveActivatedDate,
   saveAdminLog,
   invalidateSignature,
+  isMonthLocked,
+  getMonthFromDate,
 } from '@/lib/storage-utils'
 import { mockInstructors, mockCourses } from '@/data'
 import { Signature, ActivatedDate, AdminLog } from '@/types'
@@ -124,6 +126,15 @@ export default function AdminDashboardPage() {
         return
       }
 
+      // 월 마감 확인
+      const targetMonth = getMonthFromDate(activateForm.date)
+      if (isMonthLocked(targetMonth)) {
+        setActivateError(
+          `${targetMonth} 월은 이미 마감되었습니다. 날짜를 활성화할 수 없습니다.`
+        )
+        return
+      }
+
       // 활성화 날짜 저장
       const activatedDate: ActivatedDate = {
         id: `activated-${Date.now()}`,
@@ -204,6 +215,15 @@ export default function AdminDashboardPage() {
     }
 
     try {
+      // 월 마감 확인
+      const targetMonth = getMonthFromDate(signatureToInvalidate.date)
+      if (isMonthLocked(targetMonth)) {
+        setInvalidateError(
+          `${targetMonth} 월은 이미 마감되었습니다. 서명을 무효화할 수 없습니다.`
+        )
+        return
+      }
+
       // 서명 무효화
       invalidateSignature(signatureToInvalidate.id)
 

@@ -1,11 +1,16 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import AdminLayout from '@/components/AdminLayout'
+import ApproverSignatureCanvas from '@/components/ApproverSignatureCanvas'
 import {
   getAllSignatures,
   getApproverSignatureByMonth,
   getMonthLock,
   isMonthLocked,
+  saveApproverSignature,
+  saveMonthLock,
+  saveAdminLog,
+  unlockMonth,
 } from '@/lib/storage-utils'
 import { Signature } from '@/types'
 import { formatTimestamp, getCurrentDateKST } from '@/lib/time-utils'
@@ -22,6 +27,10 @@ export default function ApproverMonthlyPage() {
   const [selectedSignature, setSelectedSignature] = useState<Signature | null>(
     null
   )
+  const [showSignatureCanvas, setShowSignatureCanvas] = useState(false)
+  const [showLockConfirm, setShowLockConfirm] = useState(false)
+  const [showUnlockConfirm, setShowUnlockConfirm] = useState(false)
+  const [unlockReason, setUnlockReason] = useState('')
 
   // 확인자가 아니면 접근 불가
   useEffect(() => {
@@ -75,6 +84,90 @@ export default function ApproverMonthlyPage() {
   // 확인자 서명 정보
   const approverSignature = getApproverSignatureByMonth(selectedMonth)
 
+  // 확인자 서명 저장
+  const handleSaveApproverSignature = (imageData: string) => {
+    if (!admin) return
+
+    const newSignature = {
+      id: `approver-sig-${Date.now()}`,
+      approverId: admin.id,
+      approverName: admin.name,
+      month: selectedMonth,
+      imageData,
+      timestamp: new Date().toISOString(),
+    }
+
+    saveApproverSignature(newSignature)
+    setShowSignatureCanvas(false)
+
+    // 서명 후 마감 확인 모달 표시
+    setShowLockConfirm(true)
+  }
+
+  // 월 마감 처리
+  const handleLockMonth = () => {
+    if (!admin || !approverSignature) return
+
+    const lock = {
+      id: `lock-${Date.now()}`,
+      month: selectedMonth,
+      lockedBy: admin.id,
+      lockedByName: admin.name,
+      lockedAt: new Date().toISOString(),
+      approverSignatureId: approverSignature.id,
+    }
+
+    saveMonthLock(lock)
+
+    // 로그 기록
+    saveAdminLog({
+      id: `log-${Date.now()}`,
+      adminId: admin.id,
+      adminName: admin.name,
+      action: 'lock_month',
+      targetType: 'month',
+      targetId: selectedMonth,
+      targetName: selectedMonth,
+      timestamp: new Date().toISOString(),
+      details: {
+        signatureCount: monthSignatures.length,
+      },
+    })
+
+    setShowLockConfirm(false)
+    // 페이지 새로고침으로 마감 상태 반영
+    window.location.reload()
+  }
+
+  // 월 마감 해제 처리 (슈퍼 관리자 전용)
+  const handleUnlockMonth = () => {
+    if (!admin || admin.role !== 'super-admin') return
+    if (!unlockReason.trim()) {
+      alert('마감 해제 사유를 입력해주세요.')
+      return
+    }
+
+    unlockMonth(selectedMonth)
+
+    // 로그 기록
+    saveAdminLog({
+      id: `log-${Date.now()}`,
+      adminId: admin.id,
+      adminName: admin.name,
+      action: 'unlock_month',
+      targetType: 'month',
+      targetId: selectedMonth,
+      targetName: selectedMonth,
+      reason: unlockReason,
+      timestamp: new Date().toISOString(),
+    })
+
+    setShowUnlockConfirm(false)
+    setUnlockReason('')
+    // 페이지 새로고침으로 마감 해제 상태 반영
+    window.location.reload()
+  }
+
   return (
     <AdminLayout title="월별 출근부 조회">
       <div className="max-w-7xl mx-auto">
@@ -83,14 +176,23 @@ export default function ApproverMonthlyPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">조회 월 선택</h2>
             {isLocked && (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <span className="inline-flex px-3 py-1 text-sm font-medium rounded-full bg-red-100 text-red-800">
                   🔒 마감됨
                 </span>
                 {monthLock && (
                   <span className="text-sm text-gray-600">
-                    {monthLock.lockedByName} ({formatTimestamp(monthLock.lockedAt).split(' ')[0]})
+                    {monthLock.lockedByName} (
+                    {formatTimestamp(monthLock.lockedAt).split(' ')[0]})
                   </span>
+                )}
+                {admin?.role === 'super-admin' && (
+                  <button
+                    onClick={() => setShowUnlockConfirm(true)}
+                    className="px-4 py-1.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
+                  >
+                    🔓 마감 해제
+                  </button>
                 )}
               </div>
             )}
@@ -230,15 +332,25 @@ export default function ApproverMonthlyPage() {
 
         {/* 확인자 서명 섹션 */}
         <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            확인자 서명
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">확인자 서명</h2>
+            {approverSignature && !isLocked && (
+              <button
+                onClick={() => setShowLockConfirm(true)}
+                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                🔒 월 마감
+              </button>
+            )}
+          </div>
 
           {approverSignature ? (
             <div className="border-2 border-gray-200 rounded-lg p-4 bg-gray-50">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-sm text-gray-600">확인자: {approverSignature.approverName}</p>
+                  <p className="text-sm text-gray-600">
+                    확인자: {approverSignature.approverName}
+                  </p>
                   <p className="text-sm text-gray-600">
                     서명 시각: {formatTimestamp(approverSignature.timestamp)}
                   </p>
@@ -251,13 +363,23 @@ export default function ApproverMonthlyPage() {
                 className="max-w-xs h-auto border border-gray-300 rounded"
               />
             </div>
+          ) : showSignatureCanvas ? (
+            <ApproverSignatureCanvas
+              onSave={handleSaveApproverSignature}
+              approverName={admin?.name || ''}
+              month={selectedMonth}
+              signatureCount={monthSignatures.length}
+            />
           ) : (
             <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-              <p className="text-gray-500">아직 확인자 서명이 없습니다.</p>
+              <p className="text-gray-500 mb-4">아직 확인자 서명이 없습니다.</p>
               {!isLocked && (
-                <p className="text-sm text-gray-400 mt-2">
-                  아래에서 서명하고 마감할 수 있습니다.
-                </p>
+                <button
+                  onClick={() => setShowSignatureCanvas(true)}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  서명하기
+                </button>
               )}
             </div>
           )}
@@ -358,6 +480,122 @@ export default function ApproverMonthlyPage() {
                   닫기
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 월 마감 확인 모달 */}
+      {showLockConfirm && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={() => setShowLockConfirm(false)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              월 마감 확인
+            </h3>
+            <div className="space-y-3 mb-6">
+              <p className="text-gray-700">
+                <span className="font-semibold">{selectedMonth}</span> 월을
+                마감하시겠습니까?
+              </p>
+              <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+                <p className="text-sm text-yellow-800">
+                  ⚠️ 마감 후에는 해당 월에 대한 다음 작업이 제한됩니다:
+                </p>
+                <ul className="text-sm text-yellow-800 mt-2 ml-4 list-disc space-y-1">
+                  <li>강사의 서명 추가</li>
+                  <li>관리자의 날짜 활성화</li>
+                  <li>관리자의 서명 무효화</li>
+                </ul>
+              </div>
+              <p className="text-sm text-gray-600">
+                서명 건수: <span className="font-medium">{monthSignatures.length}건</span>
+              </p>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowLockConfirm(false)}
+                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleLockMonth}
+                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                마감 실행
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 월 마감 해제 확인 모달 (슈퍼 관리자 전용) */}
+      {showUnlockConfirm && admin?.role === 'super-admin' && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={() => {
+            setShowUnlockConfirm(false)
+            setUnlockReason('')
+          }}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              월 마감 해제 (슈퍼 관리자)
+            </h3>
+            <div className="space-y-4 mb-6">
+              <p className="text-gray-700">
+                <span className="font-semibold">{selectedMonth}</span> 월의 마감을
+                해제하시겠습니까?
+              </p>
+              <div className="bg-orange-50 border border-orange-200 rounded p-3">
+                <p className="text-sm text-orange-800">
+                  ⚠️ 마감 해제 후 다음 작업이 가능해집니다:
+                </p>
+                <ul className="text-sm text-orange-800 mt-2 ml-4 list-disc space-y-1">
+                  <li>강사의 서명 추가</li>
+                  <li>관리자의 날짜 활성화</li>
+                  <li>관리자의 서명 무효화</li>
+                </ul>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  마감 해제 사유 (필수)
+                </label>
+                <textarea
+                  value={unlockReason}
+                  onChange={(e) => setUnlockReason(e.target.value)}
+                  placeholder="마감 해제 사유를 입력하세요"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                  rows={3}
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowUnlockConfirm(false)
+                  setUnlockReason('')
+                }}
+                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleUnlockMonth}
+                disabled={!unlockReason.trim()}
+                className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              >
+                마감 해제
+              </button>
             </div>
           </div>
         </div>
