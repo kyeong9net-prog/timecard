@@ -5,6 +5,7 @@ interface SignatureCanvasProps {
   instructorName: string
   courseName: string
   date: string
+  canSubmit?: boolean
 }
 
 export default function SignatureCanvas({
@@ -12,6 +13,7 @@ export default function SignatureCanvas({
   instructorName,
   courseName,
   date,
+  canSubmit = true,
 }: SignatureCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isDrawing, setIsDrawing] = useState(false)
@@ -134,7 +136,7 @@ export default function SignatureCanvas({
         </button>
         <button
           onClick={handleSave}
-          disabled={isEmpty}
+          disabled={isEmpty || !canSubmit}
           className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors min-w-[100px]"
         >
           제출
