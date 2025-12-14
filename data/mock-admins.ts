@@ -19,6 +19,13 @@ export const mockAdmins: Admin[] = [
     name: '이슈퍼',
     role: 'super-admin',
   },
+  {
+    id: 'approver-001',
+    username: 'approver',
+    password: 'approver123',
+    name: '박확인',
+    role: 'approver',
+  },
 ]
 
 /**

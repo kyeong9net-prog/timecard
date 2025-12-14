@@ -7,7 +7,7 @@ export interface Admin {
   username: string
   password: string
   name: string
-  role: 'admin' | 'super-admin'
+  role: 'admin' | 'super-admin' | 'approver'
 }
 
 // 강사 타입
@@ -83,6 +83,8 @@ export type AdminActionType =
   | 'invalidate_signature' // 서명 무효화
   | 'login' // 로그인
   | 'logout' // 로그아웃
+  | 'lock_month' // 월 마감
+  | 'unlock_month' // 월 마감 해제
 
 export interface AdminLog {
   id: string
@@ -95,4 +97,24 @@ export interface AdminLog {
   reason?: string // 사유
   timestamp: string // ISO 8601 format
   details?: Record<string, unknown> // 추가 상세 정보
+}
+
+// 확인자 서명 타입
+export interface ApproverSignature {
+  id: string
+  approverId: string
+  approverName: string
+  month: string // YYYY-MM format
+  imageData: string // Canvas 서명 이미지
+  timestamp: string // ISO 8601 format
+}
+
+// 월 마감 타입
+export interface MonthLock {
+  id: string
+  month: string // YYYY-MM format
+  lockedBy: string // 확인자 또는 관리자 ID
+  lockedByName: string
+  lockedAt: string // ISO 8601 format
+  approverSignatureId?: string // 확인자 서명 ID (있는 경우)
 }

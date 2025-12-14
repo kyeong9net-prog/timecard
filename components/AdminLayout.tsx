@@ -42,7 +42,11 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
             <div className="text-right">
               <p className="text-sm font-medium text-gray-900">{admin.name}</p>
               <p className="text-xs text-gray-600">
-                {admin.role === 'super-admin' ? '슈퍼 관리자' : '관리자'}
+                {admin.role === 'super-admin'
+                  ? '슈퍼 관리자'
+                  : admin.role === 'approver'
+                  ? '확인자'
+                  : '관리자'}
               </p>
             </div>
             <button
@@ -59,26 +63,45 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         {/* 사이드바 */}
         <aside className="w-64 bg-white border-r border-gray-200 min-h-screen">
           <nav className="p-4 space-y-2">
-            <Link
-              href="/admin/dashboard"
-              className={`block px-4 py-3 rounded-lg transition-colors ${
-                router.pathname === '/admin/dashboard'
-                  ? 'bg-blue-50 text-blue-700 font-medium'
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              📊 서명 현황 조회
-            </Link>
-            <Link
-              href="/admin/logs"
-              className={`block px-4 py-3 rounded-lg transition-colors ${
-                router.pathname === '/admin/logs'
-                  ? 'bg-blue-50 text-blue-700 font-medium'
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              📝 관리자 행위 로그
-            </Link>
+            {admin.role === 'approver' ? (
+              <>
+                {/* 확인자 전용 메뉴 */}
+                <Link
+                  href="/approver/monthly"
+                  className={`block px-4 py-3 rounded-lg transition-colors ${
+                    router.pathname === '/approver/monthly'
+                      ? 'bg-blue-50 text-blue-700 font-medium'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  📅 월별 출근부 조회
+                </Link>
+              </>
+            ) : (
+              <>
+                {/* 관리자 메뉴 */}
+                <Link
+                  href="/admin/dashboard"
+                  className={`block px-4 py-3 rounded-lg transition-colors ${
+                    router.pathname === '/admin/dashboard'
+                      ? 'bg-blue-50 text-blue-700 font-medium'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  📊 서명 현황 조회
+                </Link>
+                <Link
+                  href="/admin/logs"
+                  className={`block px-4 py-3 rounded-lg transition-colors ${
+                    router.pathname === '/admin/logs'
+                      ? 'bg-blue-50 text-blue-700 font-medium'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  📝 관리자 행위 로그
+                </Link>
+              </>
+            )}
             <Link
               href="/"
               className="block px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"

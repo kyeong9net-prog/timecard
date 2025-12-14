@@ -3,11 +3,19 @@
  * 서명 데이터를 브라우저 LocalStorage에 저장하고 조회합니다.
  */
 
-import { Signature, ActivatedDate, AdminLog } from '@/types'
+import {
+  Signature,
+  ActivatedDate,
+  AdminLog,
+  ApproverSignature,
+  MonthLock,
+} from '@/types'
 
 const SIGNATURES_KEY = 'signatures'
 const ACTIVATED_DATES_KEY = 'activated_dates'
 const ADMIN_LOGS_KEY = 'admin_logs'
+const APPROVER_SIGNATURES_KEY = 'approver_signatures'
+const MONTH_LOCKS_KEY = 'month_locks'
 
 /**
  * 서명 데이터를 LocalStorage에 저장
@@ -231,4 +239,117 @@ export function getAllAdminLogs(): AdminLog[] {
     console.error('로그 조회 실패:', error)
     return []
   }
+}
+
+// ============================================
+// 확인자 서명 관련 함수
+// ============================================
+
+/**
+ * 확인자 서명 저장
+ */
+export function saveApproverSignature(signature: ApproverSignature): void {
+  try {
+    const signatures = getAllApproverSignatures()
+    signatures.push(signature)
+    localStorage.setItem(APPROVER_SIGNATURES_KEY, JSON.stringify(signatures))
+  } catch (error) {
+    console.error('확인자 서명 저장 실패:', error)
+    throw new Error('확인자 서명 저장 중 오류가 발생했습니다.')
+  }
+}
+
+/**
+ * 모든 확인자 서명 조회
+ */
+export function getAllApproverSignatures(): ApproverSignature[] {
+  try {
+    const data = localStorage.getItem(APPROVER_SIGNATURES_KEY)
+    if (!data) return []
+    return JSON.parse(data) as ApproverSignature[]
+  } catch (error) {
+    console.error('확인자 서명 조회 실패:', error)
+    return []
+  }
+}
+
+/**
+ * 특정 월의 확인자 서명 조회
+ */
+export function getApproverSignatureByMonth(
+  month: string
+): ApproverSignature | null {
+  const signatures = getAllApproverSignatures()
+  return signatures.find((s) => s.month === month) || null
+}
+
+// ============================================
+// 월 마감 관련 함수
+// ============================================
+
+/**
+ * 월 마감 저장
+ */
+export function saveMonthLock(lock: MonthLock): void {
+  try {
+    const locks = getAllMonthLocks()
+    // 같은 월에 대한 기존 마감이 있으면 제거 (덮어쓰기)
+    const filtered = locks.filter((l) => l.month !== lock.month)
+    filtered.push(lock)
+    localStorage.setItem(MONTH_LOCKS_KEY, JSON.stringify(filtered))
+  } catch (error) {
+    console.error('월 마감 저장 실패:', error)
+    throw new Error('월 마감 중 오류가 발생했습니다.')
+  }
+}
+
+/**
+ * 모든 월 마감 조회
+ */
+export function getAllMonthLocks(): MonthLock[] {
+  try {
+    const data = localStorage.getItem(MONTH_LOCKS_KEY)
+    if (!data) return []
+    return JSON.parse(data) as MonthLock[]
+  } catch (error) {
+    console.error('월 마감 조회 실패:', error)
+    return []
+  }
+}
+
+/**
+ * 특정 월 마감 여부 확인
+ */
+export function isMonthLocked(month: string): boolean {
+  const locks = getAllMonthLocks()
+  return locks.some((l) => l.month === month)
+}
+
+/**
+ * 특정 월 마감 정보 조회
+ */
+export function getMonthLock(month: string): MonthLock | null {
+  const locks = getAllMonthLocks()
+  return locks.find((l) => l.month === month) || null
+}
+
+/**
+ * 월 마감 해제 (슈퍼 관리자 전용)
+ */
+export function unlockMonth(month: string): void {
+  try {
+    const locks = getAllMonthLocks()
+    const filtered = locks.filter((l) => l.month !== month)
+    localStorage.setItem(MONTH_LOCKS_KEY, JSON.stringify(filtered))
+  } catch (error) {
+    console.error('월 마감 해제 실패:', error)
+    throw new Error('월 마감 해제 중 오류가 발생했습니다.')
+  }
+}
+
+/**
+ * 특정 날짜가 속한 월 구하기 (YYYY-MM-DD -> YYYY-MM)
+ */
+export function getMonthFromDate(date: string): string {
+  return date.substring(0, 7) // YYYY-MM-DD -> YYYY-MM
 }
