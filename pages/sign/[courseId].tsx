@@ -7,9 +7,18 @@ import TimeRangeInput from '@/components/TimeRangeInput'
 import ClassPeriodSelector from '@/components/ClassPeriodSelector'
 import { getInstructorById, getCourseById } from '@/lib/instructors'
 import { mockClassPeriods } from '@/data'
-import { Course, Signature } from '@/types'
-import { getCurrentDateKST, getCurrentTimestampKST, isToday } from '@/lib/time-utils'
-import { saveSignature, checkDuplicateSignature } from '@/lib/storage-utils'
+import { Course, Signature, ActivatedDate } from '@/types'
+import {
+  getCurrentDateKST,
+  getCurrentTimestampKST,
+  isToday,
+  formatDateKorean,
+} from '@/lib/time-utils'
+import {
+  saveSignature,
+  checkDuplicateSignature,
+  getActivatedDatesByInstructor,
+} from '@/lib/storage-utils'
 
 export default function SignaturePage() {
   const router = useRouter()
@@ -17,6 +26,10 @@ export default function SignaturePage() {
   const [instructorName, setInstructorName] = useState<string>('')
   const [course, setCourse] = useState<Course | null>(null)
   const [currentDate, setCurrentDate] = useState<string>('')
+  const [availableDates, setAvailableDates] = useState<
+    Array<{ date: string; label: string; isActivated: boolean }>
+  >([])
+  const [selectedDate, setSelectedDate] = useState<string>('')
 
   // 유형별 입력 상태
   const [timeText, setTimeText] = useState<string>('') // 유형1
@@ -38,7 +51,41 @@ export default function SignaturePage() {
       if (courseData) setCourse(courseData)
 
       // 현재 날짜 설정 (KST)
-      setCurrentDate(getCurrentDateKST())
+      const today = getCurrentDateKST()
+      setCurrentDate(today)
+
+      // 활성화된 날짜 가져오기
+      const activatedDates = getActivatedDatesByInstructor(instructorId)
+      const courseDates = activatedDates.filter((d) => d.courseId === courseId)
+
+      // 사용 가능한 날짜 목록 생성 (오늘 + 활성화된 날짜들)
+      const dates: Array<{
+        date: string
+        label: string
+        isActivated: boolean
+      }> = [
+        {
+          date: today,
+          label: `오늘 (${formatDateKorean(today)})`,
+          isActivated: false,
+        },
+      ]
+
+      courseDates.forEach((ad) => {
+        if (ad.date !== today) {
+          dates.push({
+            date: ad.date,
+            label: `${formatDateKorean(ad.date)} (활성화됨)`,
+            isActivated: true,
+          })
+        }
+      })
+
+      // 날짜순 정렬 (최신순)
+      dates.sort((a, b) => b.date.localeCompare(a.date))
+
+      setAvailableDates(dates)
+      setSelectedDate(today) // 기본값은 오늘
     }
   }, [instructorId, courseId])
 
@@ -58,10 +105,13 @@ export default function SignaturePage() {
         )
       }
 
-      // 2. 당일 날짜만 서명 가능 체크
+      // 2. 선택된 날짜가 유효한지 체크 (오늘이거나 활성화된 날짜여야 함)
       const today = getCurrentDateKST()
-      if (currentDate !== today) {
-        throw new Error('당일 날짜에만 서명할 수 있습니다.')
+      const isActivatedDate = availableDates.find(
+        (d) => d.date === selectedDate && d.isActivated
+      )
+      if (selectedDate !== today && !isActivatedDate) {
+        throw new Error('오늘 또는 활성화된 날짜만 서명할 수 있습니다.')
       }
 
       // 3. 중복 서명 체크
@@ -84,7 +134,7 @@ export default function SignaturePage() {
       const duplicate = checkDuplicateSignature(
         instructorId,
         courseId,
-        currentDate,
+        selectedDate,
         course.attendanceType,
         additionalData
       )
@@ -104,10 +154,10 @@ export default function SignaturePage() {
         instructorName,
         courseId,
         courseName: course.name,
-        date: currentDate,
+        date: selectedDate,
         timestamp: getCurrentTimestampKST(),
         imageData,
-        status: 'normal',
+        status: isActivatedDate ? 'activated' : 'normal',
       }
 
       // 유형별 추가 데이터
@@ -204,7 +254,7 @@ export default function SignaturePage() {
                 <span className="font-semibold">강의:</span> {course?.name}
               </p>
               <p className="text-sm text-gray-600">
-                <span className="font-semibold">날짜:</span> {currentDate}
+                <span className="font-semibold">날짜:</span> {selectedDate}
               </p>
             </div>
             <p className="mt-6 text-sm text-gray-500">3초 후 자동으로 돌아갑니다...</p>
@@ -289,6 +339,34 @@ export default function SignaturePage() {
           </div>
         </div>
 
+        {/* 날짜 선택 */}
+        {availableDates.length > 0 && (
+          <div className="max-w-4xl mx-auto mb-6">
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                서명 날짜 선택
+              </label>
+              <select
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                {availableDates.map((dateOption) => (
+                  <option key={dateOption.date} value={dateOption.date}>
+                    {dateOption.label}
+                  </option>
+                ))}
+              </select>
+              {availableDates.find((d) => d.date === selectedDate)
+                ?.isActivated && (
+                <p className="mt-2 text-sm text-orange-600">
+                  ⚠️ 이 날짜는 관리자가 활성화한 날짜입니다.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* 유형별 입력 UI */}
         <div className="max-w-4xl mx-auto">
           {course.attendanceType === 'daily-multiple' && (
@@ -317,7 +395,7 @@ export default function SignaturePage() {
             onSave={handleSave}
             instructorName={instructorName}
             courseName={course.name}
-            date={currentDate}
+            date={selectedDate || currentDate}
             canSubmit={canSubmit() && !isLoading}
           />
         </div>

@@ -70,6 +70,16 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
               📊 서명 현황 조회
             </Link>
             <Link
+              href="/admin/logs"
+              className={`block px-4 py-3 rounded-lg transition-colors ${
+                router.pathname === '/admin/logs'
+                  ? 'bg-blue-50 text-blue-700 font-medium'
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              📝 관리자 행위 로그
+            </Link>
+            <Link
               href="/"
               className="block px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
             >
