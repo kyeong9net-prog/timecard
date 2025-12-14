@@ -12,7 +12,7 @@
 
 ## 전체 Phase 목록
 
-- [ ] Phase 1: 프로젝트 초기 설정 및 기본 구조
+- [x] Phase 1: 프로젝트 초기 설정 및 기본 구조
 - [ ] Phase 2: 서명 저장 및 기본 검증
 - [ ] Phase 3: 관리자 기본 기능 - 로그인 및 조회
 - [ ] Phase 4: 관리자 고급 기능 - 날짜 활성화 및 무효화
@@ -33,42 +33,42 @@
 ### ✅ 구현/개선 기능
 
 #### 프로젝트 초기 설정
-- [ ] Next.js + TypeScript 프로젝트 생성
-- [ ] 필요한 의존성 설치 (Tailwind CSS, React Hook Form 등)
-- [ ] 프로젝트 폴더 구조 설정 (`/components`, `/pages`, `/lib`, `/types`, `/data`)
-- [ ] ESLint, Prettier 설정
+- [x] Next.js + TypeScript 프로젝트 생성
+- [x] 필요한 의존성 설치 (Tailwind CSS, React Hook Form 등)
+- [x] 프로젝트 폴더 구조 설정 (`/components`, `/pages`, `/lib`, `/types`, `/data`)
+- [x] ESLint, Prettier 설정
 
 #### 데이터 모델 및 Mock 데이터
-- [ ] TypeScript 타입 정의 (`Instructor`, `Course`, `Signature`, `SignatureStatus`)
-- [ ] Mock 데이터 파일 생성 (`/data/mock-instructors.ts`, `/data/mock-courses.ts`)
-- [ ] 강사 3명, 강의 5개 정도의 샘플 데이터 작성
-- [ ] 강사-강의 매핑 관계 설정
+- [x] TypeScript 타입 정의 (`Instructor`, `Course`, `Signature`, `SignatureStatus`)
+- [x] Mock 데이터 파일 생성 (`/data/mock-instructors.ts`, `/data/mock-courses.ts`)
+- [x] 강사 3명, 강의 5개 정도의 샘플 데이터 작성
+- [x] 강사-강의 매핑 관계 설정
 
 #### 라우팅 구조
-- [ ] 메인 페이지 (`/`) - 시스템 안내 및 강사/관리자 입구
-- [ ] 강사 서명 페이지 (`/sign`) - 강의 선택 화면
-- [ ] 서명 입력 페이지 (`/sign/[courseId]`) - 실제 서명 화면
+- [x] 메인 페이지 (`/`) - 시스템 안내 및 강사/관리자 입구
+- [x] 강사 서명 페이지 (`/sign`) - 강의 선택 화면
+- [x] 서명 입력 페이지 (`/sign/[courseId]`) - 실제 서명 화면
 
 #### 강사 서명 기본 UI
-- [ ] 강사 식별 화면 (강사명 선택 - Soft Identification)
-- [ ] 강의 선택 화면 (강사에게 배정된 강의 목록 표시)
-- [ ] 서명 입력 화면 (Canvas 기반 서명 입력 UI)
-- [ ] 서명 전 확인 화면 (강사명, 강의명, 날짜 명확히 표시)
+- [x] 강사 식별 화면 (강사명 선택 - Soft Identification)
+- [x] 강의 선택 화면 (강사에게 배정된 강의 목록 표시)
+- [x] 서명 입력 화면 (Canvas 기반 서명 입력 UI)
+- [x] 서명 전 확인 화면 (강사명, 강의명, 날짜 명확히 표시)
 
 #### 기본 컴포넌트
-- [ ] `InstructorSelector` - 강사 선택 컴포넌트
-- [ ] `CourseList` - 강의 목록 컴포넌트
-- [ ] `SignatureCanvas` - 서명 입력 캔버스 컴포넌트
-- [ ] `Header` - 공통 헤더
+- [x] `InstructorSelector` - 강사 선택 컴포넌트
+- [x] `CourseList` - 강의 목록 컴포넌트
+- [x] `SignatureCanvas` - 서명 입력 캔버스 컴포넌트
+- [x] `Header` - 공통 헤더
 
 ### ✅ 작업 완료 후 검증 항목
-- [ ] 프로젝트가 `npm run dev`로 정상 실행됨
-- [ ] 메인 페이지에서 강사 입구로 진입 가능
-- [ ] 강사를 선택하면 해당 강사의 강의 목록이 표시됨
-- [ ] 강의를 선택하면 서명 입력 화면으로 이동
-- [ ] 서명 캔버스에 마우스/터치로 그림을 그릴 수 있음
-- [ ] 서명 전 확인 화면에 강사명, 강의명, 오늘 날짜가 정확히 표시됨
-- [ ] 반응형 디자인이 태블릿 화면(768px~1024px)에서 정상 작동
+- [x] 프로젝트가 `npm run dev`로 정상 실행됨
+- [x] 메인 페이지에서 강사 입구로 진입 가능
+- [x] 강사를 선택하면 해당 강사의 강의 목록이 표시됨
+- [x] 강의를 선택하면 서명 입력 화면으로 이동
+- [x] 서명 캔버스에 마우스/터치로 그림을 그릴 수 있음
+- [x] 서명 전 확인 화면에 강사명, 강의명, 오늘 날짜가 정확히 표시됨
+- [x] 반응형 디자인이 태블릿 화면(768px~1024px)에서 정상 작동
 
 ---
 
