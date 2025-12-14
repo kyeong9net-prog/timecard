@@ -120,6 +120,16 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 >
                   📋 PDF 출력 이력
                 </Link>
+                <Link
+                  href="/admin/sync-conflicts"
+                  className={`block px-4 py-3 rounded-lg transition-colors ${
+                    router.pathname === '/admin/sync-conflicts'
+                      ? 'bg-blue-50 text-blue-700 font-medium'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  ⚠️ 동기화 충돌
+                </Link>
               </>
             )}
             <Link

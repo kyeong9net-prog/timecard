@@ -21,10 +21,16 @@ import {
   isMonthLocked,
   getMonthFromDate,
 } from '@/lib/storage-utils'
+import {
+  saveOfflineSignature,
+  getOfflineSignatureCount,
+} from '@/lib/offline-storage-utils'
+import { useOffline } from '@/contexts/OfflineContext'
 
 export default function SignaturePage() {
   const router = useRouter()
   const { courseId, instructorId } = router.query
+  const { isOffline } = useOffline()
   const [instructorName, setInstructorName] = useState<string>('')
   const [course, setCourse] = useState<Course | null>(null)
   const [currentDate, setCurrentDate] = useState<string>('')
@@ -32,6 +38,7 @@ export default function SignaturePage() {
     Array<{ date: string; label: string; isActivated: boolean }>
   >([])
   const [selectedDate, setSelectedDate] = useState<string>('')
+  const [offlineCount, setOfflineCount] = useState<number>(0)
 
   // 유형별 입력 상태
   const [timeText, setTimeText] = useState<string>('') // 유형1
@@ -43,6 +50,7 @@ export default function SignaturePage() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string>('')
   const [showSuccess, setShowSuccess] = useState<boolean>(false)
+  const [isOfflineSave, setIsOfflineSave] = useState<boolean>(false)
 
   useEffect(() => {
     if (typeof instructorId === 'string' && typeof courseId === 'string') {
@@ -88,6 +96,9 @@ export default function SignaturePage() {
 
       setAvailableDates(dates)
       setSelectedDate(today) // 기본값은 오늘
+
+      // 오프라인 서명 개수 업데이트
+      setOfflineCount(getOfflineSignatureCount())
     }
   }, [instructorId, courseId])
 
@@ -180,8 +191,16 @@ export default function SignaturePage() {
         signature.classPeriodId = selectedPeriodId || undefined
       }
 
-      // 6. LocalStorage에 저장
-      saveSignature(signature)
+      // 6. LocalStorage에 저장 (온라인/오프라인 구분)
+      if (isOffline) {
+        // 오프라인 모드: 임시 저장
+        saveOfflineSignature(signature)
+        setIsOfflineSave(true)
+      } else {
+        // 온라인 모드: 일반 저장
+        saveSignature(signature)
+        setIsOfflineSave(false)
+      }
 
       // 7. 저장 완료 화면 표시
       setShowSuccess(true)
@@ -254,8 +273,13 @@ export default function SignaturePage() {
               </svg>
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              서명이 완료되었습니다!
+              {isOfflineSave ? '서명이 임시 저장되었습니다!' : '서명이 완료되었습니다!'}
             </h2>
+            {isOfflineSave && (
+              <p className="text-sm text-orange-600 mb-4">
+                네트워크 복구 시 자동으로 동기화됩니다.
+              </p>
+            )}
             <div className="mt-6 space-y-2 text-left bg-gray-50 p-4 rounded-lg">
               <p className="text-sm text-gray-600">
                 <span className="font-semibold">강사:</span> {instructorName}
@@ -279,6 +303,32 @@ export default function SignaturePage() {
       <Header title="서명 입력" />
 
       <main className="container mx-auto py-8">
+        {/* 오프라인 서명 대기 개수 표시 */}
+        {offlineCount > 0 && (
+          <div className="max-w-4xl mx-auto mb-6">
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <div className="flex items-center">
+                <svg
+                  className="h-5 w-5 text-orange-500 mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <p className="text-sm text-orange-800">
+                  동기화 대기 중인 서명: <span className="font-semibold">{offlineCount}건</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 에러 메시지 */}
         {error && (
           <div className="max-w-4xl mx-auto mb-6">

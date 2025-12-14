@@ -44,6 +44,9 @@ export interface InstructorCourseMapping {
 // 서명 상태 타입
 export type SignatureStatus = 'normal' | 'activated' | 'invalidated'
 
+// 동기화 상태 타입
+export type SyncStatus = 'synced' | 'pending' | 'failed'
+
 // 서명 타입 (대폭 확장)
 export interface Signature {
   id: string
@@ -55,6 +58,9 @@ export interface Signature {
   timestamp: string // ISO 8601 format
   imageData: string // SVG or PNG string
   status: SignatureStatus
+
+  // 동기화 상태 (오프라인 모드용)
+  syncStatus?: SyncStatus
 
   // 유형별 추가 정보 (optional)
   timeText?: string // 유형1 (daily-multiple): 자유 텍스트 (예: "2시간", "14:00-16:00")
@@ -133,4 +139,21 @@ export interface PdfExportHistory {
   exportedByName: string // 출력한 관리자 이름
   exportedAt: string // 출력 시각 (ISO 8601)
   signatureCount: number // 출력된 서명 건수
+}
+
+// 동기화 충돌 타입
+export type ConflictType = 'duplicate' | 'month_locked'
+
+export interface SyncConflict {
+  id: string
+  offlineSignatureId: string
+  conflictType: ConflictType
+  instructorId: string
+  instructorName: string
+  courseId: string
+  courseName: string
+  date: string // YYYY-MM-DD format
+  timestamp: string // 충돌 발생 시각 (ISO 8601)
+  reason: string // 충돌 사유
+  offlineSignatureData?: Signature // 무시된 오프라인 서명 데이터
 }
