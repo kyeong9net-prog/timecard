@@ -9,6 +9,7 @@ import {
   AdminLog,
   ApproverSignature,
   MonthLock,
+  PdfExportHistory,
 } from '@/types'
 
 const SIGNATURES_KEY = 'signatures'
@@ -16,6 +17,7 @@ const ACTIVATED_DATES_KEY = 'activated_dates'
 const ADMIN_LOGS_KEY = 'admin_logs'
 const APPROVER_SIGNATURES_KEY = 'approver_signatures'
 const MONTH_LOCKS_KEY = 'month_locks'
+const PDF_EXPORT_HISTORY_KEY = 'pdf_export_history'
 
 /**
  * 서명 데이터를 LocalStorage에 저장
@@ -352,4 +354,46 @@ export function unlockMonth(month: string): void {
  */
 export function getMonthFromDate(date: string): string {
   return date.substring(0, 7) // YYYY-MM-DD -> YYYY-MM
+}
+
+// ============================================
+// PDF 출력 이력 관련 함수
+// ============================================
+
+/**
+ * PDF 출력 이력 저장
+ */
+export function savePdfExportHistory(history: PdfExportHistory): void {
+  try {
+    const histories = getAllPdfExportHistories()
+    histories.push(history)
+    localStorage.setItem(PDF_EXPORT_HISTORY_KEY, JSON.stringify(histories))
+  } catch (error) {
+    console.error('PDF 출력 이력 저장 실패:', error)
+    throw new Error('PDF 출력 이력 저장 중 오류가 발생했습니다.')
+  }
+}
+
+/**
+ * 모든 PDF 출력 이력 조회
+ */
+export function getAllPdfExportHistories(): PdfExportHistory[] {
+  try {
+    const data = localStorage.getItem(PDF_EXPORT_HISTORY_KEY)
+    if (!data) return []
+    return JSON.parse(data) as PdfExportHistory[]
+  } catch (error) {
+    console.error('PDF 출력 이력 조회 실패:', error)
+    return []
+  }
+}
+
+/**
+ * 특정 월의 PDF 출력 이력 조회
+ */
+export function getPdfExportHistoriesByMonth(
+  month: string
+): PdfExportHistory[] {
+  const histories = getAllPdfExportHistories()
+  return histories.filter((h) => h.month === month)
 }

@@ -100,6 +100,26 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 >
                   📝 관리자 행위 로그
                 </Link>
+                <Link
+                  href="/admin/export"
+                  className={`block px-4 py-3 rounded-lg transition-colors ${
+                    router.pathname === '/admin/export'
+                      ? 'bg-blue-50 text-blue-700 font-medium'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  📄 PDF 출력
+                </Link>
+                <Link
+                  href="/admin/export/history"
+                  className={`block px-4 py-3 rounded-lg transition-colors ${
+                    router.pathname === '/admin/export/history'
+                      ? 'bg-blue-50 text-blue-700 font-medium'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  📋 PDF 출력 이력
+                </Link>
               </>
             )}
             <Link

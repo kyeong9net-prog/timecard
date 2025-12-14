@@ -85,6 +85,7 @@ export type AdminActionType =
   | 'logout' // 로그아웃
   | 'lock_month' // 월 마감
   | 'unlock_month' // 월 마감 해제
+  | 'export_pdf' // PDF 출력
 
 export interface AdminLog {
   id: string
@@ -117,4 +118,19 @@ export interface MonthLock {
   lockedByName: string
   lockedAt: string // ISO 8601 format
   approverSignatureId?: string // 확인자 서명 ID (있는 경우)
+}
+
+// PDF 출력 이력 타입
+export type PdfExportType = 'instructor' | 'course' // 강사별 또는 강의별
+
+export interface PdfExportHistory {
+  id: string
+  exportType: PdfExportType // 출력 유형
+  targetId: string // 강사 ID 또는 강의 ID
+  targetName: string // 강사명 또는 강의명
+  month: string // YYYY-MM format
+  exportedBy: string // 출력한 관리자 ID
+  exportedByName: string // 출력한 관리자 이름
+  exportedAt: string // 출력 시각 (ISO 8601)
+  signatureCount: number // 출력된 서명 건수
 }
