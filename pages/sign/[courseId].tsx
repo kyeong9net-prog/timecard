@@ -56,6 +56,7 @@ export default function SignaturePage() {
   const [showSuccess, setShowSuccess] = useState<boolean>(false)
   const [isOfflineSave, setIsOfflineSave] = useState<boolean>(false)
   const [countdown, setCountdown] = useState<number>(5)
+  const [timeWarning, setTimeWarning] = useState<string>('')
 
   useEffect(() => {
     if (typeof instructorId === 'string' && typeof courseId === 'string') {
@@ -141,6 +142,36 @@ export default function SignaturePage() {
       router.push('/')
     }
   }, [showSuccess, countdown, router])
+
+  // 시간 차이 경고 - 일반적인 강의 시간 외 서명 시 경고
+  useEffect(() => {
+    const checkTimeWarning = () => {
+      const now = new Date()
+      const kstOffset = 9 * 60 // KST is UTC+9
+      const kstTime = new Date(now.getTime() + (kstOffset + now.getTimezoneOffset()) * 60000)
+      const hour = kstTime.getHours()
+
+      // 일반적인 학교 운영 시간: 08:00 ~ 22:00
+      if (hour < 8) {
+        const diffMinutes = (8 - hour) * 60 - kstTime.getMinutes()
+        setTimeWarning(
+          ERROR_MESSAGES.TIME_DIFFERENCE_WARNING(diffMinutes).message
+        )
+      } else if (hour >= 22) {
+        const diffMinutes = (hour - 22) * 60 + kstTime.getMinutes()
+        setTimeWarning(
+          ERROR_MESSAGES.TIME_DIFFERENCE_WARNING(diffMinutes).message
+        )
+      } else {
+        setTimeWarning('')
+      }
+    }
+
+    checkTimeWarning()
+    // 매분마다 시간 체크
+    const interval = setInterval(checkTimeWarning, 60000)
+    return () => clearInterval(interval)
+  }, [])
 
   const handleSave = async (imageData: string) => {
     if (!course || typeof instructorId !== 'string' || typeof courseId !== 'string')
@@ -417,6 +448,35 @@ export default function SignaturePage() {
                 <p className="text-sm text-orange-800">
                   동기화 대기 중인 서명: <span className="font-semibold">{offlineCount}건</span>
                 </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 시간 차이 경고 */}
+        {timeWarning && (
+          <div className="max-w-4xl mx-auto mb-6">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <svg
+                  className="h-5 w-5 text-yellow-500 mt-0.5 mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+                <div>
+                  <p className="text-sm font-medium text-yellow-800">{timeWarning}</p>
+                  <p className="text-xs text-yellow-700 mt-1">
+                    일반적인 강의 시간(08:00-22:00) 외에 서명하고 있습니다.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
