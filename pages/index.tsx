@@ -15,7 +15,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header title="외부강사 전자 서명 출근부" />
+      <Header title="서울특별시교육청 000초등학교 외부강사 전자 서명 출근부" />
 
       <main className="container mx-auto py-8">
         <div className="text-center mb-8">
