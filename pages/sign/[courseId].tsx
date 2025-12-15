@@ -385,7 +385,13 @@ export default function SignaturePage() {
             </div>
 
             {/* 완료 버튼 */}
-            <div className="flex justify-center">
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => router.push(`/sign/${courseId}?instructorId=${instructorId}`)}
+                className="px-8 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors shadow-md"
+              >
+                이전단계로 돌아가기
+              </button>
               <button
                 onClick={() => router.push('/')}
                 className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md"
