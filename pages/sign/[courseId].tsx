@@ -328,7 +328,7 @@ export default function SignaturePage() {
           </div>
         </div>
 
-        <main className="container mx-auto py-8 px-4">
+        <main id="main-content" className="container mx-auto py-8 px-4" role="main">
           <div className="max-w-4xl mx-auto animate-fadeIn">
             {/* 달력 형태의 월 서명 목록 */}
             <MonthlySignatureCalendar
@@ -395,7 +395,7 @@ export default function SignaturePage() {
     <div className="min-h-screen bg-gray-50">
       <Header title="서명 입력" />
 
-      <main className="container mx-auto py-8">
+      <main id="main-content" className="container mx-auto py-8" role="main">
         {/* 오프라인 서명 대기 개수 표시 */}
         {offlineCount > 0 && (
           <div className="max-w-4xl mx-auto mb-6">

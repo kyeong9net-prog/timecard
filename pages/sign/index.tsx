@@ -57,7 +57,7 @@ export default function SignPage() {
     <div className="min-h-screen bg-gray-50">
       <Header title="강의 선택" />
 
-      <main className="container mx-auto py-8">
+      <main id="main-content" className="container mx-auto py-8" role="main">
         <CourseList
           courses={courses}
           instructorName={instructorName}

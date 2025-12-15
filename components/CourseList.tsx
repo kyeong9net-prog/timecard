@@ -14,6 +14,14 @@ export default function CourseList({
   selectedCourse,
   onSelectCourse,
 }: CourseListProps) {
+  const handleKeyDown = (e: React.KeyboardEvent, course: Course) => {
+    // Enter or Space to select
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onSelectCourse(course)
+    }
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-6">
@@ -30,12 +38,13 @@ export default function CourseList({
             <button
               key={course.id}
               onClick={() => onSelectCourse(course)}
+              onKeyDown={(e) => handleKeyDown(e, course)}
               className={`min-h-[88px] bg-white border-2 rounded-lg p-6 hover:shadow-lg transition-all duration-200 text-left relative touch-manipulation focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                 isSelected
                   ? 'border-blue-500 bg-blue-50 shadow-md'
                   : 'border-gray-300 hover:border-blue-500'
               }`}
-              aria-label={`${course.name} 강의 선택`}
+              aria-label={`${course.name} 강의 ${isSelected ? '선택됨' : '선택'}`}
               aria-pressed={isSelected}
             >
               <div className="text-lg font-semibold text-gray-800 mb-2">

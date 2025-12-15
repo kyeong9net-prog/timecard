@@ -16,13 +16,25 @@ export default function ClassPeriodSelector({
   signedPeriodIds = [],
   onSignedPeriodClick,
 }: ClassPeriodSelectorProps) {
+  const handleKeyDown = (e: React.KeyboardEvent, period: ClassPeriod, isSigned: boolean) => {
+    // Enter or Space to select
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      if (isSigned) {
+        onSignedPeriodClick?.()
+      } else {
+        onSelect(period.id)
+      }
+    }
+  }
+
   return (
     <div className="mb-6">
-      <label className="block text-sm font-semibold text-gray-700 mb-3">
+      <label className="block text-sm font-semibold text-gray-700 mb-3" id="period-selector-label">
         교시 선택
       </label>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" role="group" aria-labelledby="period-selector-label">
         {periods.map((period) => {
           const isSigned = signedPeriodIds.includes(period.id)
           const isSelected = selectedPeriodId === period.id
@@ -38,7 +50,12 @@ export default function ClassPeriodSelector({
                   onSelect(period.id)
                 }
               }}
-              className={`p-4 border-2 rounded-lg transition-all duration-200 relative ${
+              onKeyDown={(e) => handleKeyDown(e, period, isSigned)}
+              disabled={isSigned}
+              aria-label={`${period.name} ${period.startTime}부터 ${period.endTime}까지 ${isSigned ? '이미 서명 완료' : isSelected ? '선택됨' : ''}`}
+              aria-pressed={isSelected}
+              aria-disabled={isSigned}
+              className={`min-h-[88px] p-4 border-2 rounded-lg transition-all duration-200 relative touch-manipulation focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                 isSigned
                   ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-60'
                   : isSelected
