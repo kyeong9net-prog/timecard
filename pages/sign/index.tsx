@@ -47,21 +47,19 @@ export default function SignPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50">
       <Header title="강의 선택" />
 
-      <main className="container mx-auto py-8 flex-1">
+      <main className="container mx-auto py-8">
         <CourseList
           courses={courses}
           instructorName={instructorName}
           selectedCourse={selectedCourse}
           onSelectCourse={handleCourseSelect}
         />
-      </main>
 
-      {/* 하단 네비게이션 버튼 */}
-      <div className="bg-white border-t border-gray-200 py-4 px-6">
-        <div className="max-w-4xl mx-auto flex justify-between gap-4">
+        {/* 하단 네비게이션 버튼 */}
+        <div className="max-w-4xl mx-auto mt-6 flex justify-between gap-4 px-6">
           <button
             onClick={handlePrevious}
             className="px-8 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors shadow-md flex items-center gap-2"
@@ -102,7 +100,7 @@ export default function SignPage() {
             </svg>
           </button>
         </div>
-      </div>
+      </main>
     </div>
   )
 }
