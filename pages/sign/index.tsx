@@ -77,14 +77,14 @@ export default function SignPage() {
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-            <span>이전단계로</span>
+            <span>이전 단계로</span>
           </button>
           <button
             onClick={handleNext}
             disabled={!selectedCourse}
             className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-md flex items-center gap-2"
           >
-            <span>다음단계로</span>
+            <span>다음 단계로</span>
             <svg
               className="w-5 h-5"
               fill="none"
