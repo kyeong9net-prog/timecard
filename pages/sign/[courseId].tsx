@@ -414,16 +414,6 @@ export default function SignaturePage() {
       />
 
       <main className="container mx-auto py-8">
-        {/* 처음으로 돌아가기 버튼 */}
-        <div className="max-w-4xl mx-auto mb-4 flex justify-end">
-          <button
-            onClick={() => router.push('/')}
-            className="text-sm text-gray-600 hover:text-gray-900 underline"
-          >
-            처음으로 돌아가기
-          </button>
-        </div>
-
         {/* 오프라인 서명 대기 개수 표시 */}
         {offlineCount > 0 && (
           <div className="max-w-4xl mx-auto mb-6">
@@ -579,6 +569,7 @@ export default function SignaturePage() {
             courseName={course.name}
             date={selectedDate || currentDate}
             canSubmit={canSubmit() && !isLoading}
+            onReturnHome={() => router.push('/')}
           />
         </div>
       </main>
