@@ -11,10 +11,9 @@ export default function Header({ title, showBackButton = false, backUrl }: Heade
   const router = useRouter()
 
   const handleBack = () => {
+    // 항상 명시적인 URL로만 이동 (브라우저 히스토리 사용 안 함)
     if (backUrl) {
       router.push(backUrl)
-    } else {
-      router.back()
     }
   }
 
