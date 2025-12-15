@@ -30,16 +30,18 @@ export default function CourseList({
             <button
               key={course.id}
               onClick={() => onSelectCourse(course)}
-              className={`bg-white border-2 rounded-lg p-6 hover:shadow-lg transition-all duration-200 text-left relative ${
+              className={`min-h-[88px] bg-white border-2 rounded-lg p-6 hover:shadow-lg transition-all duration-200 text-left relative touch-manipulation focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                 isSelected
                   ? 'border-blue-500 bg-blue-50 shadow-md'
                   : 'border-gray-300 hover:border-blue-500'
               }`}
+              aria-label={`${course.name} 강의 선택`}
+              aria-pressed={isSelected}
             >
               <div className="text-lg font-semibold text-gray-800 mb-2">
                 {course.name}
               </div>
-              <div className="text-sm text-gray-600">{course.code}</div>
+              <div className="text-base text-gray-600">{course.code}</div>
               {isSelected && (
                 <div className="absolute top-3 right-3">
                   <svg

@@ -118,6 +118,7 @@ export default function SignatureCanvas({
           width={800}
           height={300}
           className="border border-gray-300 rounded bg-white cursor-crosshair w-full touch-none"
+          style={{ touchAction: 'none' }}
           onMouseDown={startDrawing}
           onMouseMove={draw}
           onMouseUp={stopDrawing}
@@ -133,7 +134,7 @@ export default function SignatureCanvas({
         {onReturnHome && (
           <button
             onClick={onReturnHome}
-            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
+            className="min-h-[44px] px-6 py-3 bg-gray-200 text-gray-700 text-base rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2 touch-manipulation focus:ring-2 focus:ring-gray-400 focus:outline-none"
             aria-label="처음으로 돌아가기"
           >
             <svg
@@ -155,14 +156,16 @@ export default function SignatureCanvas({
         <div className="flex gap-4 ml-auto">
           <button
             onClick={clearCanvas}
-            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors min-w-[100px]"
+            className="min-h-[44px] min-w-[100px] px-6 py-3 bg-gray-200 text-gray-700 text-base rounded-lg hover:bg-gray-300 transition-colors touch-manipulation focus:ring-2 focus:ring-gray-400 focus:outline-none"
+            aria-label="서명 지우기"
           >
             지우기
           </button>
           <button
             onClick={handleSave}
             disabled={isEmpty || !canSubmit}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors min-w-[100px]"
+            className="min-h-[44px] min-w-[100px] px-6 py-3 bg-blue-600 text-white text-base rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors touch-manipulation focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            aria-label="서명 제출하기"
           >
             제출
           </button>
