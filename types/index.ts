@@ -157,3 +157,30 @@ export interface SyncConflict {
   reason: string // 충돌 사유
   offlineSignatureData?: Signature // 무시된 오프라인 서명 데이터
 }
+
+// 데이터 변경 이력 로그 타입 (Phase 9)
+export type DataChangeActionType =
+  | 'create_instructor' // 강사 생성
+  | 'update_instructor' // 강사 수정
+  | 'deactivate_instructor' // 강사 비활성화
+  | 'create_course' // 강의 생성
+  | 'update_course' // 강의 수정
+  | 'deactivate_course' // 강의 비활성화
+  | 'add_course_mapping' // 강사-강의 매핑 추가
+  | 'remove_course_mapping' // 강사-강의 매핑 제거
+
+export type DataTargetType = 'instructor' | 'course' | 'mapping'
+
+export interface DataChangeLog {
+  id: string
+  timestamp: string // ISO 8601 format
+  adminId: string
+  adminName: string
+  actionType: DataChangeActionType
+  targetType: DataTargetType
+  targetId: string
+  targetName: string
+  beforeValue?: any // 변경 전 값
+  afterValue?: any // 변경 후 값
+  reason?: string // 변경 사유 (선택)
+}
