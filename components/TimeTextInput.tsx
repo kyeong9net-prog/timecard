@@ -11,6 +11,22 @@ export default function TimeTextInput({ value, onChange }: TimeTextInputProps) {
   const [startTime, setStartTime] = useState<string>('')
   const [endTime, setEndTime] = useState<string>('')
 
+  // 시간 범위의 총 시간 계산
+  const calculateDuration = () => {
+    if (!startTime || !endTime) return null
+
+    const [startHour] = startTime.split(':').map(Number)
+    const [endHour] = endTime.split(':').map(Number)
+
+    if (endHour <= startHour) return null
+
+    const hours = endHour - startHour
+
+    return hours
+  }
+
+  const totalHours = calculateDuration()
+
   // Generate time options (00:00 ~ 23:00)
   const timeOptions = Array.from({ length: 24 }, (_, i) => {
     const hour = i.toString().padStart(2, '0')
@@ -123,42 +139,62 @@ export default function TimeTextInput({ value, onChange }: TimeTextInputProps) {
             </label>
           </div>
           {inputType === 'range' && (
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-gray-900 mb-1">
-                  시작 시간
-                </label>
-                <select
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 font-semibold"
-                >
-                  <option value="">선택</option>
-                  {timeOptions.map((time) => (
-                    <option key={time} value={time}>
-                      {time}
-                    </option>
-                  ))}
-                </select>
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-900 mb-1">
+                    시작 시간
+                  </label>
+                  <select
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 font-semibold"
+                  >
+                    <option value="">선택</option>
+                    {timeOptions.map((time) => (
+                      <option key={time} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-900 mb-1">
+                    종료 시간
+                  </label>
+                  <select
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 font-semibold"
+                  >
+                    <option value="">선택</option>
+                    {timeOptions.map((time) => (
+                      <option key={time} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-900 mb-1">
-                  종료 시간
-                </label>
-                <select
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 font-semibold"
-                >
-                  <option value="">선택</option>
-                  {timeOptions.map((time) => (
-                    <option key={time} value={time}>
-                      {time}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+
+              {/* 총 시간 표시 */}
+              {totalHours !== null && (
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm font-bold text-blue-900">
+                    총 시간: {totalHours}시간
+                  </p>
+                </div>
+              )}
+
+              {/* 종료 시간이 시작 시간보다 이르거나 같을 때 경고 */}
+              {startTime && endTime && totalHours === null && (
+                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm font-bold text-red-800">
+                    종료 시간이 시작 시간보다 늦어야 합니다
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
