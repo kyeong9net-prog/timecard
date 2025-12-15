@@ -130,6 +130,41 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 >
                   ⚠️ 동기화 충돌
                 </Link>
+
+                {/* Phase 9: 마스터 데이터 관리 */}
+                <div className="pt-4 pb-2 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  마스터 데이터 관리
+                </div>
+                <Link
+                  href="/admin/instructors"
+                  className={`block px-4 py-3 rounded-lg transition-colors ${
+                    router.pathname === '/admin/instructors'
+                      ? 'bg-blue-50 text-blue-700 font-medium'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  👨‍🏫 강사 관리
+                </Link>
+                <Link
+                  href="/admin/courses"
+                  className={`block px-4 py-3 rounded-lg transition-colors ${
+                    router.pathname === '/admin/courses'
+                      ? 'bg-blue-50 text-blue-700 font-medium'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  📚 강의 관리
+                </Link>
+                <Link
+                  href="/admin/data-logs"
+                  className={`block px-4 py-3 rounded-lg transition-colors ${
+                    router.pathname === '/admin/data-logs'
+                      ? 'bg-blue-50 text-blue-700 font-medium'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  📜 데이터 변경 이력
+                </Link>
               </>
             )}
             <Link
