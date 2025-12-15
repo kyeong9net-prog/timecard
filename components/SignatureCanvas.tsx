@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react'
+import { rafThrottle } from '@/lib/performance-utils'
 
 interface SignatureCanvasProps {
   onSave: (imageData: string) => void
@@ -20,20 +21,33 @@ export default function SignatureCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isDrawing, setIsDrawing] = useState(false)
   const [isEmpty, setIsEmpty] = useState(true)
+  const isDrawingRef = useRef(false)
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    const ctx = canvas.getContext('2d')
+    // Performance: Use willReadFrequently for better performance when reading pixels
+    const ctx = canvas.getContext('2d', {
+      willReadFrequently: false,
+      alpha: true
+    })
     if (!ctx) return
 
-    // 캔버스 초기화
+    // 캔버스 초기화 - 부드러운 선 그리기 설정
     ctx.strokeStyle = '#000000'
     ctx.lineWidth = 2
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
+
+    // Performance: Disable image smoothing for faster rendering
+    ctx.imageSmoothingEnabled = false
   }, [])
+
+  // Sync ref with state
+  useEffect(() => {
+    isDrawingRef.current = isDrawing
+  }, [isDrawing])
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current
@@ -52,8 +66,9 @@ export default function SignatureCanvas({
     setIsEmpty(false)
   }
 
-  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isDrawing) return
+  // Optimized draw function with RAF throttling for smooth 60fps rendering
+  const drawImmediate = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawingRef.current) return
 
     const canvas = canvasRef.current
     if (!canvas) return
@@ -68,6 +83,9 @@ export default function SignatureCanvas({
     ctx.lineTo(x, y)
     ctx.stroke()
   }
+
+  // Create throttled version once using useMemo
+  const draw = React.useMemo(() => rafThrottle(drawImmediate), [])
 
   const stopDrawing = () => {
     setIsDrawing(false)
