@@ -6,6 +6,7 @@ interface ClassPeriodSelectorProps {
   selectedPeriodId: string | null
   onSelect: (periodId: string) => void
   signedPeriodIds?: string[]
+  onSignedPeriodClick?: () => void
 }
 
 export default function ClassPeriodSelector({
@@ -13,6 +14,7 @@ export default function ClassPeriodSelector({
   selectedPeriodId,
   onSelect,
   signedPeriodIds = [],
+  onSignedPeriodClick,
 }: ClassPeriodSelectorProps) {
   return (
     <div className="mb-6">
@@ -28,8 +30,14 @@ export default function ClassPeriodSelector({
           return (
             <button
               key={period.id}
-              onClick={() => !isSigned && onSelect(period.id)}
-              disabled={isSigned}
+              type="button"
+              onClick={() => {
+                if (isSigned) {
+                  onSignedPeriodClick?.()
+                } else {
+                  onSelect(period.id)
+                }
+              }}
               className={`p-4 border-2 rounded-lg transition-all duration-200 relative ${
                 isSigned
                   ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-60'

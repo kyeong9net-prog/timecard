@@ -41,6 +41,7 @@ export default function SignaturePage() {
   const [selectedDate, setSelectedDate] = useState<string>('')
   const [offlineCount, setOfflineCount] = useState<number>(0)
   const [signedPeriodIds, setSignedPeriodIds] = useState<string[]>([])
+  const [signedPeriodError, setSignedPeriodError] = useState<string>('')
 
   // 유형별 입력 상태
   const [timeText, setTimeText] = useState<string>('') // 유형1
@@ -458,16 +459,30 @@ export default function SignaturePage() {
           )}
 
           {course.attendanceType === 'class-period' && (
-            <ClassPeriodSelector
-              periods={mockClassPeriods}
-              selectedPeriodId={selectedPeriodId}
-              onSelect={setSelectedPeriodId}
-              signedPeriodIds={signedPeriodIds}
-            />
+            <>
+              {signedPeriodError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                  <p className="text-sm font-medium text-red-800">{signedPeriodError}</p>
+                </div>
+              )}
+              <ClassPeriodSelector
+                periods={mockClassPeriods}
+                selectedPeriodId={selectedPeriodId}
+                onSelect={(periodId) => {
+                  setSelectedPeriodId(periodId)
+                  setSignedPeriodError('')
+                }}
+                signedPeriodIds={signedPeriodIds}
+                onSignedPeriodClick={() =>
+                  setSignedPeriodError('이미 서명하신 교시입니다.')
+                }
+              />
+            </>
           )}
 
           {/* 서명 캔버스 */}
           <SignatureCanvas
+            key={selectedPeriodId || 'no-period'}
             onSave={handleSave}
             instructorName={instructorName}
             courseName={course.name}
