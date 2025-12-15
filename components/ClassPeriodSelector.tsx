@@ -5,12 +5,14 @@ interface ClassPeriodSelectorProps {
   periods: ClassPeriod[]
   selectedPeriodId: string | null
   onSelect: (periodId: string) => void
+  signedPeriodIds?: string[]
 }
 
 export default function ClassPeriodSelector({
   periods,
   selectedPeriodId,
   onSelect,
+  signedPeriodIds = [],
 }: ClassPeriodSelectorProps) {
   return (
     <div className="mb-6">
@@ -19,24 +21,39 @@ export default function ClassPeriodSelector({
       </label>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-        {periods.map((period) => (
-          <button
-            key={period.id}
-            onClick={() => onSelect(period.id)}
-            className={`p-4 border-2 rounded-lg transition-all duration-200 ${
-              selectedPeriodId === period.id
-                ? 'border-blue-500 bg-blue-50 shadow-md'
-                : 'border-gray-300 bg-white hover:border-blue-300 hover:shadow'
-            }`}
-          >
-            <div className="text-lg font-semibold text-gray-800">
-              {period.name}
-            </div>
-            <div className="text-sm text-gray-600 mt-1">
-              {period.startTime} - {period.endTime}
-            </div>
-          </button>
-        ))}
+        {periods.map((period) => {
+          const isSigned = signedPeriodIds.includes(period.id)
+          const isSelected = selectedPeriodId === period.id
+
+          return (
+            <button
+              key={period.id}
+              onClick={() => !isSigned && onSelect(period.id)}
+              disabled={isSigned}
+              className={`p-4 border-2 rounded-lg transition-all duration-200 relative ${
+                isSigned
+                  ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-60'
+                  : isSelected
+                    ? 'border-blue-500 bg-blue-50 shadow-md'
+                    : 'border-gray-300 bg-white hover:border-blue-300 hover:shadow'
+              }`}
+            >
+              <div className="text-lg font-semibold text-gray-800">
+                {period.name}
+              </div>
+              <div className="text-sm text-gray-600 mt-1">
+                {period.startTime} - {period.endTime}
+              </div>
+              {isSigned && (
+                <div className="absolute top-2 right-2">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                    ✓ 서명완료
+                  </span>
+                </div>
+              )}
+            </button>
+          )
+        })}
       </div>
 
       {!selectedPeriodId && (

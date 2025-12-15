@@ -20,6 +20,7 @@ import {
   getActivatedDatesByInstructor,
   isMonthLocked,
   getMonthFromDate,
+  getAllSignatures,
 } from '@/lib/storage-utils'
 import {
   saveOfflineSignature,
@@ -39,6 +40,7 @@ export default function SignaturePage() {
   >([])
   const [selectedDate, setSelectedDate] = useState<string>('')
   const [offlineCount, setOfflineCount] = useState<number>(0)
+  const [signedPeriodIds, setSignedPeriodIds] = useState<string[]>([])
 
   // 유형별 입력 상태
   const [timeText, setTimeText] = useState<string>('') // 유형1
@@ -101,6 +103,29 @@ export default function SignaturePage() {
       setOfflineCount(getOfflineSignatureCount())
     }
   }, [instructorId, courseId])
+
+  // 선택된 날짜의 이미 서명한 교시 목록 업데이트
+  useEffect(() => {
+    if (
+      typeof instructorId === 'string' &&
+      typeof courseId === 'string' &&
+      selectedDate &&
+      course?.attendanceType === 'class-period'
+    ) {
+      const allSignatures = getAllSignatures()
+      const signedPeriods = allSignatures
+        .filter(
+          (sig) =>
+            sig.instructorId === instructorId &&
+            sig.courseId === courseId &&
+            sig.date === selectedDate &&
+            sig.classPeriodId
+        )
+        .map((sig) => sig.classPeriodId as string)
+
+      setSignedPeriodIds(signedPeriods)
+    }
+  }, [selectedDate, instructorId, courseId, course?.attendanceType])
 
   const handleSave = async (imageData: string) => {
     if (!course || typeof instructorId !== 'string' || typeof courseId !== 'string')
@@ -437,6 +462,7 @@ export default function SignaturePage() {
               periods={mockClassPeriods}
               selectedPeriodId={selectedPeriodId}
               onSelect={setSelectedPeriodId}
+              signedPeriodIds={signedPeriodIds}
             />
           )}
 
