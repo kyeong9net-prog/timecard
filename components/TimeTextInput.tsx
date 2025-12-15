@@ -32,9 +32,9 @@ export default function TimeTextInput({ value, onChange }: TimeTextInputProps) {
 
   const totalDuration = calculateDuration()
 
-  // Generate time options in 10-minute intervals (00:00 ~ 23:50)
-  const timeOptions = Array.from({ length: 24 * 6 }, (_, i) => {
-    const totalMinutes = i * 10
+  // Generate time options in 10-minute intervals (08:30 ~ 23:50)
+  const timeOptions = Array.from({ length: 93 }, (_, i) => {
+    const totalMinutes = 510 + (i * 10) // 510 = 8시간 30분 (8*60 + 30)
     const hour = Math.floor(totalMinutes / 60).toString().padStart(2, '0')
     const minute = (totalMinutes % 60).toString().padStart(2, '0')
     return `${hour}:${minute}`

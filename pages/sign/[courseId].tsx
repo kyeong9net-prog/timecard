@@ -3,7 +3,6 @@ import { useRouter } from 'next/router'
 import Header from '@/components/Header'
 import SignatureCanvas from '@/components/SignatureCanvas'
 import TimeTextInput from '@/components/TimeTextInput'
-import TimeRangeInput from '@/components/TimeRangeInput'
 import ClassPeriodSelector from '@/components/ClassPeriodSelector'
 import MonthlySignatureCalendar from '@/components/MonthlySignatureCalendar'
 import { getInstructorById, getCourseById } from '@/lib/instructors'
@@ -170,11 +169,14 @@ export default function SignaturePage() {
         classPeriodId?: string
       } = {}
 
-      if (course.attendanceType === 'daily-multiple') {
+      if (course.attendanceType === 'daily-multiple' || course.attendanceType === 'time-range') {
         additionalData.timeText = timeText
-      } else if (course.attendanceType === 'time-range') {
-        additionalData.startTime = startTime
-        additionalData.endTime = endTime
+        // timeText가 시간 범위 형식이면 startTime과 endTime도 설정
+        if (timeText.includes(' - ')) {
+          const [start, end] = timeText.split(' - ').map((t) => t.trim())
+          additionalData.startTime = start
+          additionalData.endTime = end
+        }
       } else if (course.attendanceType === 'class-period') {
         additionalData.classPeriodId = selectedPeriodId || undefined
       }
@@ -209,11 +211,14 @@ export default function SignaturePage() {
       }
 
       // 유형별 추가 데이터
-      if (course.attendanceType === 'daily-multiple') {
+      if (course.attendanceType === 'daily-multiple' || course.attendanceType === 'time-range') {
         signature.timeText = timeText
-      } else if (course.attendanceType === 'time-range') {
-        signature.startTime = startTime
-        signature.endTime = endTime
+        // timeText가 시간 범위 형식이면 startTime과 endTime도 설정
+        if (timeText.includes(' - ')) {
+          const [start, end] = timeText.split(' - ').map((t) => t.trim())
+          signature.startTime = start
+          signature.endTime = end
+        }
       } else if (course.attendanceType === 'class-period') {
         signature.classPeriodId = selectedPeriodId || undefined
       }
@@ -246,10 +251,8 @@ export default function SignaturePage() {
   const canSubmit = () => {
     if (!course) return false
 
-    if (course.attendanceType === 'daily-multiple') {
+    if (course.attendanceType === 'daily-multiple' || course.attendanceType === 'time-range') {
       return timeText.trim().length > 0
-    } else if (course.attendanceType === 'time-range') {
-      return Boolean(startTime && endTime && startTime < endTime)
     } else if (course.attendanceType === 'class-period') {
       return selectedPeriodId !== null
     }
@@ -482,17 +485,8 @@ export default function SignaturePage() {
 
         {/* 유형별 입력 UI */}
         <div className="max-w-4xl mx-auto">
-          {course.attendanceType === 'daily-multiple' && (
+          {(course.attendanceType === 'daily-multiple' || course.attendanceType === 'time-range') && (
             <TimeTextInput value={timeText} onChange={setTimeText} />
-          )}
-
-          {course.attendanceType === 'time-range' && (
-            <TimeRangeInput
-              startTime={startTime}
-              endTime={endTime}
-              onStartTimeChange={setStartTime}
-              onEndTimeChange={setEndTime}
-            />
           )}
 
           {course.attendanceType === 'class-period' && (
