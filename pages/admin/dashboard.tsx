@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import AdminLayout from '@/components/AdminLayout'
+import StorageUsageWidget from '@/components/admin/StorageUsageWidget'
 import {
   getAllSignatures,
   saveActivatedDate,
@@ -284,6 +285,11 @@ export default function AdminDashboardPage() {
               {stats.invalidated}
             </p>
           </div>
+        </div>
+
+        {/* 저장소 사용량 위젯 */}
+        <div className="mb-8">
+          <StorageUsageWidget />
         </div>
 
         {/* 필터 */}
