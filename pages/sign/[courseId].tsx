@@ -337,7 +337,7 @@ export default function SignaturePage() {
                     d="M15 19l-7-7 7-7"
                   />
                 </svg>
-                <span>이전단계로</span>
+                <span>이전 단계로</span>
               </button>
               <button
                 onClick={() => router.push('/')}
