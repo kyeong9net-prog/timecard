@@ -11,26 +11,33 @@ export default function TimeTextInput({ value, onChange }: TimeTextInputProps) {
   const [startTime, setStartTime] = useState<string>('')
   const [endTime, setEndTime] = useState<string>('')
 
-  // 시간 범위의 총 시간 계산
+  // 시간 범위의 총 시간 계산 (시간과 분 단위)
   const calculateDuration = () => {
     if (!startTime || !endTime) return null
 
-    const [startHour] = startTime.split(':').map(Number)
-    const [endHour] = endTime.split(':').map(Number)
+    const [startHour, startMin] = startTime.split(':').map(Number)
+    const [endHour, endMin] = endTime.split(':').map(Number)
 
-    if (endHour <= startHour) return null
+    const startTotalMinutes = startHour * 60 + startMin
+    const endTotalMinutes = endHour * 60 + endMin
 
-    const hours = endHour - startHour
+    if (endTotalMinutes <= startTotalMinutes) return null
 
-    return hours
+    const diffMinutes = endTotalMinutes - startTotalMinutes
+    const hours = Math.floor(diffMinutes / 60)
+    const minutes = diffMinutes % 60
+
+    return { hours, minutes }
   }
 
-  const totalHours = calculateDuration()
+  const totalDuration = calculateDuration()
 
-  // Generate time options (00:00 ~ 23:00)
-  const timeOptions = Array.from({ length: 24 }, (_, i) => {
-    const hour = i.toString().padStart(2, '0')
-    return `${hour}:00`
+  // Generate time options in 10-minute intervals (00:00 ~ 23:50)
+  const timeOptions = Array.from({ length: 24 * 6 }, (_, i) => {
+    const totalMinutes = i * 10
+    const hour = Math.floor(totalMinutes / 60).toString().padStart(2, '0')
+    const minute = (totalMinutes % 60).toString().padStart(2, '0')
+    return `${hour}:${minute}`
   })
 
   // Duration options (1시간 ~ 8시간)
@@ -178,16 +185,17 @@ export default function TimeTextInput({ value, onChange }: TimeTextInputProps) {
               </div>
 
               {/* 총 시간 표시 */}
-              {totalHours !== null && (
+              {totalDuration !== null && (
                 <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm font-bold text-blue-900">
-                    총 시간: {totalHours}시간
+                    총 시간: {totalDuration.hours}시간
+                    {totalDuration.minutes > 0 && ` ${totalDuration.minutes}분`}
                   </p>
                 </div>
               )}
 
               {/* 종료 시간이 시작 시간보다 이르거나 같을 때 경고 */}
-              {startTime && endTime && totalHours === null && (
+              {startTime && endTime && totalDuration === null && (
                 <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
                   <p className="text-sm font-bold text-red-800">
                     종료 시간이 시작 시간보다 늦어야 합니다
