@@ -20,6 +20,13 @@ import {
 const SYNC_CONFLICTS_KEY = 'sync_conflicts'
 
 /**
+ * SSR-safe localStorage 접근 체크
+ */
+function isClient(): boolean {
+  return typeof window !== 'undefined'
+}
+
+/**
  * 동기화 결과 타입
  */
 export interface SyncResult {
@@ -180,6 +187,8 @@ function validateSignatureForSync(signature: Signature): {
  * 동기화 충돌 저장
  */
 export function saveSyncConflict(conflict: SyncConflict): void {
+  if (!isClient()) return
+
   try {
     const conflicts = getAllSyncConflicts()
     conflicts.push(conflict)
@@ -193,6 +202,8 @@ export function saveSyncConflict(conflict: SyncConflict): void {
  * 모든 동기화 충돌 조회
  */
 export function getAllSyncConflicts(): SyncConflict[] {
+  if (!isClient()) return []
+
   try {
     const data = localStorage.getItem(SYNC_CONFLICTS_KEY)
     if (!data) return []

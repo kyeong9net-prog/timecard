@@ -15,6 +15,11 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
   const [isOffline, setIsOffline] = useState<boolean>(false)
 
   useEffect(() => {
+    // SSR 체크
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      return
+    }
+
     // 초기 상태 설정
     setIsOffline(!navigator.onLine)
 

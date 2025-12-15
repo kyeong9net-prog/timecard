@@ -9,10 +9,19 @@ const OFFLINE_SIGNATURES_KEY = 'offline_signatures'
 const MAX_OFFLINE_SIGNATURES = 50
 
 /**
+ * SSR-safe localStorage 접근 체크
+ */
+function isClient(): boolean {
+  return typeof window !== 'undefined'
+}
+
+/**
  * 오프라인 서명 저장
  * 최대 50건까지만 저장 가능
  */
 export function saveOfflineSignature(signature: Signature): void {
+  if (!isClient()) return
+
   try {
     const signatures = getOfflineSignatures()
 
@@ -41,6 +50,8 @@ export function saveOfflineSignature(signature: Signature): void {
  * 오프라인 서명 목록 조회
  */
 export function getOfflineSignatures(): Signature[] {
+  if (!isClient()) return []
+
   try {
     const data = localStorage.getItem(OFFLINE_SIGNATURES_KEY)
     if (!data) return []
@@ -55,6 +66,8 @@ export function getOfflineSignatures(): Signature[] {
  * 오프라인 서명 저장소 정리
  */
 export function clearOfflineSignatures(): void {
+  if (!isClient()) return
+
   try {
     localStorage.removeItem(OFFLINE_SIGNATURES_KEY)
   } catch (error) {
@@ -74,6 +87,8 @@ export function getOfflineSignatureCount(): number {
  * 특정 오프라인 서명 제거
  */
 export function removeOfflineSignature(signatureId: string): void {
+  if (!isClient()) return
+
   try {
     const signatures = getOfflineSignatures()
     const filtered = signatures.filter((sig) => sig.id !== signatureId)
@@ -90,6 +105,8 @@ export function updateOfflineSignatureStatus(
   signatureId: string,
   syncStatus: 'synced' | 'failed'
 ): void {
+  if (!isClient()) return
+
   try {
     const signatures = getOfflineSignatures()
     const signature = signatures.find((sig) => sig.id === signatureId)
