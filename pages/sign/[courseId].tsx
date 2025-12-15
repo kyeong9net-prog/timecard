@@ -231,11 +231,6 @@ export default function SignaturePage() {
       // 7. 저장 완료 화면 표시
       setShowSuccess(true)
       setIsLoading(false)
-
-      // 8. 3초 후 자동으로 강의 선택 화면으로 복귀
-      setTimeout(() => {
-        router.push(`/sign?instructorId=${instructorId}`)
-      }, 3000)
     } catch (err) {
       setIsLoading(false)
       if (err instanceof Error) {
@@ -279,47 +274,123 @@ export default function SignaturePage() {
 
   // 저장 완료 화면
   if (showSuccess) {
+    // 현재 월의 모든 서명 가져오기
+    const currentMonth = selectedDate ? selectedDate.substring(0, 7) : getCurrentDateKST().substring(0, 7)
+    const allSignatures = getAllSignatures()
+    const monthSignatures = allSignatures.filter(
+      (sig) =>
+        sig.instructorId === instructorId &&
+        sig.date.startsWith(currentMonth)
+    ).sort((a, b) => b.date.localeCompare(a.date) || b.timestamp.localeCompare(a.timestamp))
+
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="max-w-md w-full mx-4">
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-            <div className="mb-4">
-              <svg
-                className="mx-auto h-16 w-16 text-green-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              {isOfflineSave ? '서명이 임시 저장되었습니다!' : '서명이 완료되었습니다!'}
-            </h2>
-            {isOfflineSave && (
-              <p className="text-sm text-orange-600 mb-4">
-                네트워크 복구 시 자동으로 동기화됩니다.
-              </p>
-            )}
-            <div className="mt-6 space-y-2 text-left bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600">
-                <span className="font-semibold">강사:</span> {instructorName}
-              </p>
-              <p className="text-sm text-gray-600">
-                <span className="font-semibold">강의:</span> {course?.name}
-              </p>
-              <p className="text-sm text-gray-600">
-                <span className="font-semibold">날짜:</span> {selectedDate}
-              </p>
-            </div>
-            <p className="mt-6 text-sm text-gray-500">3초 후 자동으로 돌아갑니다...</p>
+      <div className="min-h-screen bg-gray-50">
+        <Header title="서명 완료" showBackButton backUrl="/" />
+
+        {/* 성공 토스트 알림 - 우측 상단 고정 */}
+        <div className="fixed top-20 right-4 z-50">
+          <div className="bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 animate-fadeIn">
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span className="font-medium">
+              {isOfflineSave ? '임시 저장 완료!' : '서명 완료!'}
+            </span>
           </div>
         </div>
+
+        <main className="container mx-auto py-8 px-4">
+          <div className="max-w-4xl mx-auto">
+            {/* 월 서명 목록 */}
+            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                {currentMonth.replace('-', '년 ')}월 서명 내역
+              </h2>
+
+              {monthSignatures.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">
+                  이번 달 서명 내역이 없습니다.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {monthSignatures.map((sig, index) => {
+                    const sigCourse = getCourseById(sig.courseId)
+                    const periodInfo = sig.classPeriodId
+                      ? mockClassPeriods.find((p) => p.id === sig.classPeriodId)
+                      : null
+
+                    return (
+                      <div
+                        key={`${sig.date}-${sig.courseId}-${sig.classPeriodId || sig.timestamp}-${index}`}
+                        className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <span className="text-sm font-semibold text-gray-900">
+                                {formatDateKorean(sig.date)}
+                              </span>
+                              {sig.syncStatus === 'pending' && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                                  오프라인
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-700 font-medium">
+                              {sigCourse?.name || '알 수 없는 강의'}
+                            </p>
+                            {periodInfo && (
+                              <p className="text-xs text-gray-600 mt-1">
+                                {periodInfo.name} ({periodInfo.startTime} - {periodInfo.endTime})
+                              </p>
+                            )}
+                            {sig.timeText && (
+                              <p className="text-xs text-gray-600 mt-1">시간: {sig.timeText}</p>
+                            )}
+                            {sig.startTime && sig.endTime && (
+                              <p className="text-xs text-gray-600 mt-1">
+                                {sig.startTime} - {sig.endTime}
+                              </p>
+                            )}
+                          </div>
+                          {sig.imageData && (
+                            <div className="ml-4">
+                              <img
+                                src={sig.imageData}
+                                alt="서명"
+                                className="w-20 h-12 object-contain border border-gray-200 rounded"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* 완료 버튼 */}
+            <div className="flex justify-center">
+              <button
+                onClick={() => router.push('/')}
+                className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+              >
+                완료
+              </button>
+            </div>
+          </div>
+        </main>
       </div>
     )
   }
