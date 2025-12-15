@@ -285,7 +285,11 @@ export default function SignaturePage() {
 
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header title="서명 완료" showBackButton backUrl="/" />
+        <Header
+          title="서명 완료"
+          showBackButton
+          backUrl={`/sign/${courseId}?instructorId=${instructorId}`}
+        />
 
         {/* 성공 토스트 알림 - 우측 상단 고정 */}
         <div className="fixed top-20 right-4 z-50">
