@@ -27,6 +27,7 @@ import {
   getOfflineSignatureCount,
 } from '@/lib/offline-storage-utils'
 import { useOffline } from '@/contexts/OfflineContext'
+import { ERROR_MESSAGES, formatErrorMessage } from '@/lib/error-messages'
 
 export default function SignaturePage() {
   const router = useRouter()
@@ -139,17 +140,13 @@ export default function SignaturePage() {
     try {
       // 1. 비활성화된 강의 체크
       if (!course.isActive) {
-        throw new Error(
-          '비활성화된 강의입니다. 관리자에게 문의하세요.'
-        )
+        throw new Error(formatErrorMessage(ERROR_MESSAGES.INACTIVE_COURSE))
       }
 
       // 2. 월 마감 체크
       const targetMonth = getMonthFromDate(selectedDate)
       if (isMonthLocked(targetMonth)) {
-        throw new Error(
-          `${targetMonth} 월은 이미 마감되었습니다. 서명을 추가할 수 없습니다.`
-        )
+        throw new Error(formatErrorMessage(ERROR_MESSAGES.MONTH_LOCKED(targetMonth)))
       }
 
       // 3. 선택된 날짜가 유효한지 체크 (오늘이거나 활성화된 날짜여야 함)
@@ -158,7 +155,7 @@ export default function SignaturePage() {
         (d) => d.date === selectedDate && d.isActivated
       )
       if (selectedDate !== today && !isActivatedDate) {
-        throw new Error('오늘 또는 활성화된 날짜만 서명할 수 있습니다.')
+        throw new Error(formatErrorMessage(ERROR_MESSAGES.INVALID_DATE))
       }
 
       // 4. 중복 서명 체크
@@ -193,7 +190,7 @@ export default function SignaturePage() {
         const timeInfo =
           duplicate.timestamp || duplicate.startTime || duplicate.timeText || ''
         throw new Error(
-          `이미 서명하셨습니다. (${timeInfo ? `기존 서명: ${timeInfo}` : ''})`
+          formatErrorMessage(ERROR_MESSAGES.DUPLICATE_SIGNATURE(timeInfo))
         )
       }
 
@@ -242,7 +239,7 @@ export default function SignaturePage() {
       if (err instanceof Error) {
         setError(err.message)
       } else {
-        setError('서명 저장 중 오류가 발생했습니다.')
+        setError(formatErrorMessage(ERROR_MESSAGES.SAVE_ERROR))
       }
     }
   }
@@ -505,7 +502,7 @@ export default function SignaturePage() {
                 }}
                 signedPeriodIds={signedPeriodIds}
                 onSignedPeriodClick={() =>
-                  setSignedPeriodError('이미 서명하신 교시입니다.')
+                  setSignedPeriodError(ERROR_MESSAGES.DUPLICATE_PERIOD.message)
                 }
               />
             </>
