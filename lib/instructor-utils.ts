@@ -206,6 +206,19 @@ export function getInstructorCourseIds(instructorId: string): string[] {
 }
 
 /**
+ * 특정 강의에 배정된 강사 목록 조회
+ */
+export function getInstructorsByCourseId(courseId: string): Instructor[] {
+  const mappings = getAllMappings()
+  const instructorIds = mappings
+    .filter((m) => m.courseIds.includes(courseId))
+    .map((m) => m.instructorId)
+
+  const allInstructors = getAllInstructors()
+  return allInstructors.filter((i) => instructorIds.includes(i.id))
+}
+
+/**
  * 강사에게 강의 추가
  */
 export function addCourseToInstructor(
