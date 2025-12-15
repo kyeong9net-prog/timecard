@@ -55,6 +55,7 @@ export default function SignaturePage() {
   const [error, setError] = useState<string>('')
   const [showSuccess, setShowSuccess] = useState<boolean>(false)
   const [isOfflineSave, setIsOfflineSave] = useState<boolean>(false)
+  const [countdown, setCountdown] = useState<number>(5)
 
   useEffect(() => {
     if (typeof instructorId === 'string' && typeof courseId === 'string') {
@@ -128,6 +129,18 @@ export default function SignaturePage() {
       setSignedPeriodIds(signedPeriods)
     }
   }, [selectedDate, instructorId, courseId, course?.attendanceType])
+
+  // 성공 화면 자동 리다이렉트 카운트다운
+  useEffect(() => {
+    if (showSuccess && countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(countdown - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    } else if (showSuccess && countdown === 0) {
+      router.push('/')
+    }
+  }, [showSuccess, countdown, router])
 
   const handleSave = async (imageData: string) => {
     if (!course || typeof instructorId !== 'string' || typeof courseId !== 'string')
@@ -289,10 +302,10 @@ export default function SignaturePage() {
         <Header title="서명 완료" />
 
         {/* 성공 토스트 알림 - 우측 상단 고정 */}
-        <div className="fixed top-20 right-4 z-50">
-          <div className="bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 animate-fadeIn">
+        <div className="fixed top-20 right-4 z-50 animate-slideUp">
+          <div className="bg-green-500 text-white px-6 py-4 rounded-lg shadow-xl flex items-center space-x-3">
             <svg
-              className="h-5 w-5"
+              className="h-6 w-6 animate-scaleIn"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -304,14 +317,19 @@ export default function SignaturePage() {
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span className="font-medium">
-              {isOfflineSave ? '임시 저장 완료!' : '서명 완료!'}
-            </span>
+            <div>
+              <p className="font-bold text-lg">
+                {isOfflineSave ? '임시 저장 완료!' : '서명 완료!'}
+              </p>
+              <p className="text-sm text-green-100">
+                {countdown}초 후 자동으로 처음으로 돌아갑니다
+              </p>
+            </div>
           </div>
         </div>
 
         <main className="container mx-auto py-8 px-4">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto animate-fadeIn">
             {/* 달력 형태의 월 서명 목록 */}
             <MonthlySignatureCalendar
               yearMonth={currentMonth}
@@ -321,8 +339,12 @@ export default function SignaturePage() {
             {/* 하단 네비게이션 버튼 */}
             <div className="mt-6 flex justify-between gap-4">
               <button
-                onClick={() => router.push(`/sign/${courseId}?instructorId=${instructorId}`)}
-                className="px-8 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors shadow-md flex items-center gap-2"
+                onClick={() => {
+                  setCountdown(5)
+                  router.push(`/sign/${courseId}?instructorId=${instructorId}`)
+                }}
+                className="min-h-[44px] px-8 py-3 bg-gray-200 text-gray-700 text-base font-semibold rounded-lg hover:bg-gray-300 transition-colors shadow-md flex items-center gap-2 touch-manipulation"
+                aria-label="이전 단계로 돌아가기"
               >
                 <svg
                   className="w-5 h-5"
@@ -340,10 +362,14 @@ export default function SignaturePage() {
                 <span>이전 단계로</span>
               </button>
               <button
-                onClick={() => router.push('/')}
-                className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md flex items-center gap-2"
+                onClick={() => {
+                  setCountdown(5)
+                  router.push('/')
+                }}
+                className="min-h-[44px] px-8 py-3 bg-blue-600 text-white text-base font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md flex items-center gap-2 touch-manipulation"
+                aria-label="완료하고 처음으로 돌아가기"
               >
-                <span>완료</span>
+                <span>완료 ({countdown}초)</span>
                 <svg
                   className="w-5 h-5"
                   fill="none"
