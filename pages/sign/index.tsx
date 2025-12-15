@@ -10,6 +10,7 @@ export default function SignPage() {
   const { instructorId } = router.query
   const [courses, setCourses] = useState<Course[]>([])
   const [instructorName, setInstructorName] = useState<string>('')
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
 
   useEffect(() => {
     if (typeof instructorId === 'string') {
@@ -24,7 +25,17 @@ export default function SignPage() {
   }, [instructorId])
 
   const handleCourseSelect = (course: Course) => {
-    router.push(`/sign/${course.id}?instructorId=${instructorId}`)
+    setSelectedCourse(course)
+  }
+
+  const handleNext = () => {
+    if (selectedCourse) {
+      router.push(`/sign/${selectedCourse.id}?instructorId=${instructorId}`)
+    }
+  }
+
+  const handlePrevious = () => {
+    router.push('/')
   }
 
   if (!instructorId) {
@@ -36,16 +47,62 @@ export default function SignPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header title="강의 선택" showBackButton backUrl="/" />
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Header title="강의 선택" />
 
-      <main className="container mx-auto py-8">
+      <main className="container mx-auto py-8 flex-1">
         <CourseList
           courses={courses}
           instructorName={instructorName}
+          selectedCourse={selectedCourse}
           onSelectCourse={handleCourseSelect}
         />
       </main>
+
+      {/* 하단 네비게이션 버튼 */}
+      <div className="bg-white border-t border-gray-200 py-4 px-6">
+        <div className="max-w-4xl mx-auto flex justify-between gap-4">
+          <button
+            onClick={handlePrevious}
+            className="px-8 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors shadow-md flex items-center gap-2"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            <span>이전단계로</span>
+          </button>
+          <button
+            onClick={handleNext}
+            disabled={!selectedCourse}
+            className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-md flex items-center gap-2"
+          >
+            <span>다음단계로</span>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
