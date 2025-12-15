@@ -37,7 +37,7 @@ export default function SignPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header title="강의 선택" />
+      <Header title="강의 선택" showBackButton backUrl="/" />
 
       <main className="container mx-auto py-8">
         <CourseList

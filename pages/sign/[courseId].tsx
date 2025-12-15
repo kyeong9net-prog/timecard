@@ -300,7 +300,11 @@ export default function SignaturePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header title="서명 입력" />
+      <Header
+        title="서명 입력"
+        showBackButton
+        backUrl={`/sign?instructorId=${instructorId}`}
+      />
 
       <main className="container mx-auto py-8">
         {/* 오프라인 서명 대기 개수 표시 */}
